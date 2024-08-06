@@ -2,16 +2,21 @@ package com.rocketFoodDelivery.rocketFood.dtos;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-public class AuthRequestDto {
+
+@Data
+public class AuthRequestDTO {
+
     @NotNull
     @Email
     private String email;
 
     @NotNull
     private String password;
+
+    public AuthRequestDTO(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 }

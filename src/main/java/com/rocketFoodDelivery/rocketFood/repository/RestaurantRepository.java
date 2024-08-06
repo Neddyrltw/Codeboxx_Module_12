@@ -56,30 +56,33 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     List<Object[]> findRestaurantsByRatingAndPriceRange(@Param("rating") Integer rating, @Param("priceRange") Integer priceRange);
 
     // TODO
-    @Modifying
-    @Transactional
-    @Query(nativeQuery = true, value =
-        "TODO Write SQL query here")
-    void saveRestaurant(long userId, long addressId, String name, int priceRange, String phone, String email);
+    // @Modifying
+    // @Transactional
+    // @Query(nativeQuery = true)
+    // // value = "Write SQL query here")
+    // void saveRestaurant(long userId, long addressId, String name, int priceRange, String phone, String email);
 
-    // TODO
-    @Modifying
-    @Transactional
-    @Query(nativeQuery = true, value =
-            "TODO Write SQL query here")
-    void updateRestaurant(int restaurantId, String name, int priceRange, String phone);
+    // // TODO
+    // @Modifying
+    // @Transactional
+    // @Query(nativeQuery = true)
+    // // value = "TODO Write SQL query here")
+    // void updateRestaurant(int restaurantId, String name, int priceRange, String phone);
 
-    // TODO
-    @Query(nativeQuery = true, value = "TODO Write SQL query here")
-    Optional<Restaurant> findRestaurantById(@Param("restaurantId") int restaurantId);
+    // // TODO
+    // @Query(nativeQuery = true)
+    // // value = "TODO Write SQL query here")
+    // Optional<Restaurant> findRestaurantById(@Param("restaurantId") int restaurantId);
 
-    @Query(nativeQuery = true, value = "SELECT LAST_INSERT_ID() AS id")
-    int getLastInsertedId();
+    // @Query(nativeQuery = true)
+    // // value = "SELECT LAST_INSERT_ID() AS id")
+    // int getLastInsertedId();
 
-    // TODO
-    @Modifying
-    @Transactional
-    @Query(nativeQuery = true, value = "TODO Write SQL query here")
-    void deleteRestaurantById(@Param("restaurantId") int restaurantId);
+    // // TODO
+    // @Modifying
+    // @Transactional
+    // @Query(nativeQuery = true)
+    // // value = "TODO Write SQL query here")
+    // void deleteRestaurantById(@Param("restaurantId") int restaurantId);
 
 }

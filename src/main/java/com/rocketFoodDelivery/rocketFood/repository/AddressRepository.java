@@ -17,11 +17,12 @@ public interface AddressRepository extends JpaRepository<Address, Integer> {
     List<Address> findAllByOrderByIdDesc();
     
     // TODO
-    @Modifying
-    @Transactional
-    @Query(nativeQuery = true, value =
-        "TODO Write SQL query here")
-    void saveAddress(String streetAddress, String city, String postalCode);
+    // @Modifying
+    // @Transactional
+    // @Query(nativeQuery = true
+    // // value = ""
+    // )
+    // void saveAddress(String streetAddress, String city, String postalCode);
     
     @Query(nativeQuery = true, value = "SELECT LAST_INSERT_ID() AS id")
     int getLastInsertedId();
