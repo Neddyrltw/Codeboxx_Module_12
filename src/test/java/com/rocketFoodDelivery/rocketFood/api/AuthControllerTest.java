@@ -91,7 +91,6 @@ public class AuthControllerTest {
         loginAttempt.setEmail("erica.ger@gmail.com");
         loginAttempt.setPassword("password");
 
-        //STEP 3: VALIDATE RESPONSE CODE AND CONTENT
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth")
         .contentType(MediaType.APPLICATION_JSON)
         .content(new ObjectMapper().writeValueAsString(loginAttempt)))

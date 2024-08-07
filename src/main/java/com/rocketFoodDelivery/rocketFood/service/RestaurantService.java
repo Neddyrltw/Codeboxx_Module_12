@@ -81,19 +81,31 @@ public class RestaurantService {
      *         Each object contains the restaurant's ID, name, price range, and a rounded-up average rating.
      */
     public List<ApiRestaurantDto> findRestaurantsByRatingAndPriceRange(Integer rating, Integer priceRange) {
+        System.out.println("Rating parameter: " + rating);
+        System.out.println("Price range parameter: " + priceRange);
+
+        // Fetch  list of restaurants from repository
         List<Object[]> restaurants = restaurantRepository.findRestaurantsByRatingAndPriceRange(rating, priceRange);
 
+        // Create empty list to hold  the API Restaurant DTOs
         List<ApiRestaurantDto> restaurantDtos = new ArrayList<>();
 
+            // Loop through each row of fetched list
             for (Object[] row : restaurants) {
+                //Extract restaurant id from first element of row
                 int restaurantId = (int) row[0];
+                // Extract name of restaurant from second element
                 String name = (String) row[1];
+                // Extract price range from third element
                 int range = (int) row[2];
+                // Extract avg. rating for fourth element(if !null)
                 double avgRating = (row[3] != null) ? ((BigDecimal) row[3]).setScale(1, RoundingMode.HALF_UP).doubleValue() : 0.0;
+                // Round avg. rating up 
                 int roundedAvgRating = (int) Math.ceil(avgRating);
+                // Create new RestaurantDTO obj from extracted values
                 restaurantDtos.add(new ApiRestaurantDto(restaurantId, name, range, roundedAvgRating));
             }
-
+            // Return the list of objects
             return restaurantDtos;
     }
 
