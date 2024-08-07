@@ -32,6 +32,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+// STATIC SPRING FRAMEWORK IMPORTS
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 // JACKSON DATABIND IMPORT
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -76,30 +81,6 @@ public class RestaurantApiControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    public void testFindRestaurantsByRatingAndPriceRange() throws Exception {
-
-        // Mock data
-        List<ApiRestaurantDto> mockData = new ArrayList<>();
-
-        // Mock service behavior
-        when(restaurantService.findRestaurantsByRatingAndPriceRange(eq(4), eq(3)))
-            .thenReturn(mockData);
-
-        // Perform GET request and validate response
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/restaurants")
-            .param("rating", "4")
-            .param("price_range", "3")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Success"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data").isArray())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(2))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].name").value("Weimann, Brakus and Upton"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].price_range").value(3))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].rating").value(4));
-    }
-
-    @Test
     void testCreateRestaurant_Success() throws Exception {
         // Example request payload
         String requestBody = "{"
@@ -129,6 +110,58 @@ public class RestaurantApiControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.street_address").value("123 Wellington St."))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.city").value("Montreal"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.postal_code").value("H3G264"));
+    }
+
+    @Test
+    public void testGetRestaurantById_Success() throws Exception {
+        // Mock data
+        int restaurantId = 1;
+        String expectedName = "Schoen-Ernser";
+        int expectedPriceRange = 3;
+        int expectedRating = 3;
+    
+        // Create a Restaurant DTO
+        ApiRestaurantDto mockRestaurant = new ApiRestaurantDto();
+        mockRestaurant.setId(restaurantId);
+        mockRestaurant.setName(expectedName);
+        mockRestaurant.setPriceRange(expectedPriceRange);
+        mockRestaurant.setRating(expectedRating);
+    
+        // Mock service behavior
+        when(restaurantService.findById(restaurantId)).thenReturn(Optional.of(mockRestaurant));
+    
+        // Perform GET request and assert response
+        mockMvc.perform(get("/api/restaurants/{id}", restaurantId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(restaurantId))
+                .andExpect(jsonPath("$.name").value(expectedName))
+                .andExpect(jsonPath("$.price_range").value(expectedPriceRange))
+                .andExpect(jsonPath("$.rating").value(expectedRating));
+    }
+    
+
+    @Test
+    public void testFindRestaurantsByRatingAndPriceRange() throws Exception {
+
+        // Mock data
+        List<ApiRestaurantDto> mockData = new ArrayList<>();
+
+        // Mock service behavior
+        when(restaurantService.findRestaurantsByRatingAndPriceRange(eq(4), eq(3)))
+            .thenReturn(mockData);
+
+        // Perform GET request and validate response
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/restaurants")
+            .param("rating", "4")
+            .param("price_range", "3")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Success"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data").isArray())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(2))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].name").value("Weimann, Brakus and Upton"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].price_range").value(3))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].rating").value(4));
     }
 
     @Test
