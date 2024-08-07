@@ -119,26 +119,21 @@ public class RestaurantApiControllerTest {
         String expectedName = "Schoen-Ernser";
         int expectedPriceRange = 3;
         int expectedRating = 3;
-    
+
         // Create a Restaurant DTO
-        ApiRestaurantDto mockRestaurant = new ApiRestaurantDto();
-        mockRestaurant.setId(restaurantId);
-        mockRestaurant.setName(expectedName);
-        mockRestaurant.setPriceRange(expectedPriceRange);
-        mockRestaurant.setRating(expectedRating);
-    
+        ApiRestaurantDto mockRestaurant = new ApiRestaurantDto(restaurantId, expectedName, expectedPriceRange, expectedRating);
+
         // Mock service behavior
-        when(restaurantService.findById(restaurantId)).thenReturn(Optional.of(mockRestaurant));
-    
+        when(restaurantService.findRestaurantWithAverageRatingById(restaurantId)).thenReturn(Optional.of(mockRestaurant));
+
         // Perform GET request and assert response
         mockMvc.perform(get("/api/restaurants/{id}", restaurantId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(restaurantId))
-                .andExpect(jsonPath("$.name").value(expectedName))
-                .andExpect(jsonPath("$.price_range").value(expectedPriceRange))
-                .andExpect(jsonPath("$.rating").value(expectedRating));
+                .andExpect(jsonPath("$.data.id").value(restaurantId))
+                .andExpect(jsonPath("$.data.name").value(expectedName))
+                .andExpect(jsonPath("$.data.price_range").value(expectedPriceRange))
+                .andExpect(jsonPath("$.data.rating").value(expectedRating));
     }
-    
 
     @Test
     public void testFindRestaurantsByRatingAndPriceRange() throws Exception {

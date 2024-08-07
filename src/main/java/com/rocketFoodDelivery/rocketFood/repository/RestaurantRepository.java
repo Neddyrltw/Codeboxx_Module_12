@@ -75,10 +75,22 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
                          @Param("phone") String phone,
                          @Param("email") String email);
     
+    /**
+     * Retrieves the ID of the last inserted restaurant.
+     *
+     * @return An Optional containing the ID of the last inserted restaurant, or an empty Optional if no restaurant has been inserted.
+     */
     @Query(nativeQuery = true, value = "SELECT LAST_INSERT_ID()")
     Optional<Integer> findLastInsertedId();
-    
-    Optional<Restaurant> findById(int id);
+
+    /**
+     * Finds a restaurant by its ID.
+     *
+     * @param id The ID of the restaurant to find.
+     * @return An Optional containing the found restaurant, or an empty Optional if no restaurant with the given ID exists.
+     */
+    @Query(nativeQuery = true, value = "SELECT * FROM restaurants WHERE id = :id")
+    Optional<Restaurant> findById(@Param("id") int id);
 
     // // TODO
     // @Modifying
