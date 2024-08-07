@@ -56,7 +56,6 @@ import com.rocketFoodDelivery.rocketFood.repository.UserRepository;
 import com.rocketFoodDelivery.rocketFood.security.JwtUtil;
 import com.rocketFoodDelivery.rocketFood.service.RestaurantService;
 
-
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 public class RestaurantApiControllerTest {
@@ -88,43 +87,48 @@ public class RestaurantApiControllerTest {
 
         // Perform GET request and validate response
         mockMvc.perform(MockMvcRequestBuilders.get("/api/restaurants")
-        .param("rating", "4")
-        .param("price_range", "3")
-        .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Success"))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.data").isArray())
-        .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(2))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].name").value("Weimann, Brakus and Upton"))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].price_range").value(3))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].rating").value(4));
+            .param("rating", "4")
+            .param("price_range", "3")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Success"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data").isArray())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].id").value(2))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].name").value("Weimann, Brakus and Upton"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].price_range").value(3))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].rating").value(4));
     }
 
     @Test
-    public void testCreateRestaurant_Success() throws Exception {
-        // Mock data
-        ApiAddressDto inputAddress = new ApiAddressDto(1, "123 Wellington St.", "Montreal", "H1H2H2");
-        ApiCreateRestaurantDto inputRestaurant = new ApiCreateRestaurantDto(1, 4, "Villa wellington", 2, "5144154415", "reservations@villawellington.com", inputAddress);
+    void testCreateRestaurant_Success() throws Exception {
+        // Example request payload
+        String requestBody = "{"
+                + "\"user_id\": 2,"
+                + "\"name\": \"Villa Wellington\","
+                + "\"phone\": \"15141234567\","
+                + "\"email\": \"villa@wellington.com\","
+                + "\"price_range\": 2,"
+                + "\"address\": {"
+                + "\"street_address\": \"123 Wellington St.\","
+                + "\"city\": \"Montreal\","
+                + "\"postal_code\": \"H3G264\""
+                + "}"
+                + "}";
 
-        // Mock service behavior
-        when(restaurantService.createRestaurant(any())).thenReturn(Optional.of(inputRestaurant));
-
-        // Validate response code and content
+        // Perform POST request and assert response
         mockMvc.perform(MockMvcRequestBuilders.post("/api/restaurants")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(inputRestaurant)))
+                .content(requestBody))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Success"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.id").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.name").value(inputRestaurant.getName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.phone").value(inputRestaurant.getPhone()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.email").value(inputRestaurant.getEmail()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.id").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.city").value(inputRestaurant.getAddress().getCity()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.street_address").value(inputRestaurant.getAddress().getStreetAddress()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.postal_code").value(inputRestaurant.getAddress().getPostalCode()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.user_id").value(inputRestaurant.getUserId()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.price_range").value(inputRestaurant.getPriceRange()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.name").value("Villa Wellington"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.phone").value("15141234567"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.email").value("villa@wellington.com"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.user_id").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.price_range").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.street_address").value("123 Wellington St."))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.city").value("Montreal"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.postal_code").value("H3G264"));
     }
 
     @Test
@@ -151,6 +155,4 @@ public class RestaurantApiControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.price_range").value(2))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.phone").value("555-1234"));
     }
-
-
 }

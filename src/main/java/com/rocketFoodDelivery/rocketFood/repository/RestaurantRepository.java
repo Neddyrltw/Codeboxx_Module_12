@@ -2,9 +2,11 @@ package com.rocketFoodDelivery.rocketFood.repository;
 
 import com.rocketFoodDelivery.rocketFood.models.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,12 +55,30 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
         "WHERE (:rating IS NULL OR result.rating = :rating)")
     List<Object[]> findRestaurantsByRatingAndPriceRange(@Param("rating") Integer rating, @Param("priceRange") Integer priceRange);
 
-    // TODO
-    // @Modifying
-    // @Transactional
-    // @Query(nativeQuery = true)
-    // // value = "Write SQL query here")
-    // void saveRestaurant(long userId, long addressId, String name, int priceRange, String phone, String email);
+    /**
+     * Inserts a new restaurant into the database.
+     *
+     * @param userId      The ID of the user associated with the restaurant.
+     * @param addressId   The ID of the address associated with the restaurant.
+     * @param name        The name of the restaurant.
+     * @param priceRange  The price range of the restaurant.
+     * @param phone       The phone number of the restaurant.
+     * @param email       The email address of the restaurant.
+     */
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO restaurants (user_id, address_id, name, price_range, phone, email) VALUES (:userId, :addressId, :name, :priceRange, :phone, :email)", nativeQuery = true)
+    void saveRestaurant(@Param("userId") int userId,
+                         @Param("addressId") int addressId,
+                         @Param("name") String name,
+                         @Param("priceRange") int priceRange,
+                         @Param("phone") String phone,
+                         @Param("email") String email);
+    
+    @Query(nativeQuery = true, value = "SELECT LAST_INSERT_ID()")
+    Optional<Integer> findLastInsertedId();
+    
+    Optional<Restaurant> findById(int id);
 
     // // TODO
     // @Modifying
@@ -82,5 +102,5 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     // @Query(nativeQuery = true)
     // // value = "TODO Write SQL query here")
     // void deleteRestaurantById(@Param("restaurantId") int restaurantId);
-
 }
+

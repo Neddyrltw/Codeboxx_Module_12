@@ -1,6 +1,7 @@
 package com.rocketFoodDelivery.rocketFood.controller.api;
 
 import com.rocketFoodDelivery.rocketFood.dtos.ApiCreateRestaurantDto;
+import com.rocketFoodDelivery.rocketFood.dtos.ApiErrorDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiRestaurantDto;
 import com.rocketFoodDelivery.rocketFood.service.RestaurantService;
 import com.rocketFoodDelivery.rocketFood.util.ResponseBuilder;
@@ -9,10 +10,13 @@ import com.rocketFoodDelivery.rocketFood.exception.*;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -24,17 +28,24 @@ public class RestaurantApiController {
         this.restaurantService = restaurantService;
     }
 
-    // TODO
-
-    /**
-     * Creates a new restaurant.
-     *
-     * @param restaurant The data for the new restaurant.
-     * @return ResponseEntity with the created restaurant's data, or a BadRequestException if creation fails.
-     */
     @PostMapping("/api/restaurants")
-    public ResponseEntity<Object> createRestaurant(@RequestBody ApiCreateRestaurantDto restaurant) {
-        return null; // TODO return proper object
+    public ResponseEntity<Object> createRestaurant(@RequestBody ApiCreateRestaurantDto inputDto) {
+        Optional<ApiCreateRestaurantDto> createdRestaurant = restaurantService.createRestaurant(inputDto);
+    
+        if (createdRestaurant.isPresent()) {
+            ApiCreateRestaurantDto restaurant = createdRestaurant.get();
+            // Prepare the success response
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Success");
+            response.put("data", restaurant);
+    
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            // Prepare the error response
+            ApiErrorDTO errorResponse = new ApiErrorDTO();
+            errorResponse.setError("Invalid or missing parameters");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
     
     // TODO
