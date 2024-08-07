@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rocketFoodDelivery.rocketFood.controller.api.RestaurantApiController;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiAddressDto;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiCreateRestaurantDto;
+import com.rocketFoodDelivery.rocketFood.dtos.AuthRequestDTO;
 import com.rocketFoodDelivery.rocketFood.repository.UserRepository;
 import com.rocketFoodDelivery.rocketFood.service.RestaurantService;
 
@@ -38,6 +39,21 @@ public class RestaurantApiControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    public void testLoginAttempt_Success() throws Exception {
+        AuthRequestDTO loginAttempt = new AuthRequestDTO();
+        loginAttempt.setEmail("erica.ger@gmail.com");
+        loginAttempt.setPassword("password");
+
+        //STEP 3: VALIDATE RESPONSE CODE AND CONTENT
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(new ObjectMapper().writeValueAsString(loginAttempt)))
+        .andExpect(MockMvcResultMatchers.status().isOk())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").exists())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.success").value("true"));
+    }
 
     @Test
     public void testCreateRestaurant_Success() throws Exception {
