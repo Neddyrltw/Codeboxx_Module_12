@@ -170,52 +170,66 @@ public class RestaurantApiControllerTest {
     // Update Success
     @Test
     void testUpdateRestaurant_Success() throws Exception {
+
+        // Mock data
         int restaurantId = 1;
         String updatedName = "B12 Nation";
         int updatedPriceRange = 3;
         String updatedPhone = "2223334444";
     
+        // Mocks service behavior
         ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
         updateDto.setName(updatedName);
         updateDto.setPriceRange(updatedPriceRange);
         updateDto.setPhone(updatedPhone);
     
+        // Mock PUT request and validate response
         mockMvc.perform(MockMvcRequestBuilders.put("/api/restaurants/{id}", restaurantId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Success"))
-                .andExpect(jsonPath("$.data.id").value(restaurantId))
-                .andExpect(jsonPath("$.data.name").value(updatedName))
-                .andExpect(jsonPath("$.data.price_range").value(updatedPriceRange))
-                .andExpect(jsonPath("$.data.phone").value(updatedPhone));
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(updateDto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Success"))
+            .andExpect(jsonPath("$.data.id").value(restaurantId))
+            .andExpect(jsonPath("$.data.name").value(updatedName))
+            .andExpect(jsonPath("$.data.price_range").value(updatedPriceRange))
+            .andExpect(jsonPath("$.data.phone").value(updatedPhone));
     }
     
     // Update 404 (Not Found) fail
     @Test
     void testUpdateRestaurant_NotFound() throws Exception {
+
+        // Mock data
         int nonExistentId = 9;
+
+        // Mock service behavior
         ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
         updateDto.setName("Nonexistent Restaurant");
         updateDto.setPriceRange(3);
         updateDto.setPhone("0000000000");
     
+        // Mock PUT request with id not stored in database
         mockMvc.perform(MockMvcRequestBuilders.put("/api/restaurants/{id}", nonExistentId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Resource not found"))
-                .andExpect(jsonPath("$.details").value("Restaurant with id " + nonExistentId + " not found"));
+                .andExpect(jsonPath("$.details").value("Restaurant with id " + nonExistentId + " not found."));
     }
     // Update 400 (Bad Request) fail
     @Test
     void testUpdateRestaurant_ValidationFailed() throws Exception {
+
+        // Mock data
         int restaurantId = 9;
+
+        // Mock service behavior
         ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
         updateDto.setName("Invalid Restaurant");
         updateDto.setPriceRange(5);  // Invalid value (should be between 1 and 3)
         updateDto.setPhone("1111111111");
 
+        // Mock PUT request with invalid input value
         mockMvc.perform(MockMvcRequestBuilders.put("/api/restaurants/{id}", restaurantId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
@@ -224,4 +238,25 @@ public class RestaurantApiControllerTest {
                 .andExpect(jsonPath("$.details").exists());
 }
     // DELETE
+    @Test
+    void testDeleteRestaurant_Success() throws Exception {
+        // Mock data
+        int restaurantId = 1;
+
+        // Mock service behavior
+        ApiRestaurantDto deleteDto = new ApiRestaurantDto();
+        deleteDto.setName("Schoen-Ernser");
+        deleteDto.setPriceRange(3);
+        deleteDto.setRating(3);
+
+        // Mock DELETE request and validate response
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/restaurants/{id}", restaurantId)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Success"))
+            .andExpect(jsonPath("$.data.id").value(restaurantId))
+            .andExpect(jsonPath("$.data.name").value("Schoen-Ernser"))
+            .andExpect(jsonPath("$.data.price_range").value(3))
+            .andExpect(jsonPath("$.data.rating").value(3));
+    }
 }

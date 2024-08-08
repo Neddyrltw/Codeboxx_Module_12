@@ -142,8 +142,6 @@ public ResponseEntity<Object> updateRestaurant(
     }
 }
 
-
-        
         @ExceptionHandler(ResourceNotFoundException.class)
         @ResponseStatus(HttpStatus.NOT_FOUND)
         public Map<String, String> handleNotFound(ResourceNotFoundException e) {
