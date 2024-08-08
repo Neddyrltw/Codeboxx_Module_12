@@ -3,10 +3,14 @@ package com.rocketFoodDelivery.rocketFood.service;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiAddressDto;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiCreateRestaurantDto;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiRestaurantDto;
+import com.rocketFoodDelivery.rocketFood.exception.ResourceNotFoundException;
 import com.rocketFoodDelivery.rocketFood.models.Address;
 import com.rocketFoodDelivery.rocketFood.models.Restaurant;
 import com.rocketFoodDelivery.rocketFood.models.UserEntity;
 import com.rocketFoodDelivery.rocketFood.repository.*;
+
+import jakarta.validation.ValidationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
@@ -48,6 +52,75 @@ public class RestaurantService {
         this.addressRepository = addressRepository;
     }
 
+    /**
+     * Creates a new restaurant and returns its information.
+     *
+     * @param restaurant The data for the new restaurant.
+     * @return An Optional containing the created restaurant's information as an ApiCreateRestaurantDto,
+     *         or Optional.empty() if the user with the provided user ID does not exist or if an error occurs during creation.
+     */
+    @Modifying
+    @Transactional
+    public Optional<ApiCreateRestaurantDto> createRestaurant(ApiCreateRestaurantDto inputDto) {
+        // Check if user exists
+        UserEntity userEntity = userRepository.findById(inputDto.getUserId()).orElse(null);
+    
+        if (userEntity == null) {
+            // Return an empty Optional if no user exists with the given ID
+            return Optional.empty();
+        }
+    
+        // Check if address exists using AddressService
+        Address address = addressService.findById(inputDto.getAddress().getId())
+            .orElseGet(() -> {
+                // Create a new address if it doesn't exist
+                Address newAddress = Address.builder()
+                        .streetAddress(inputDto.getAddress().getStreetAddress())
+                        .city(inputDto.getAddress().getCity())
+                        .postalCode(inputDto.getAddress().getPostalCode())
+                        .build();
+                return addressService.saveAddress(newAddress); // Save using AddressService
+            });
+    
+        // Use the native SQL query to save the restaurant
+        restaurantRepository.saveRestaurant(
+            inputDto.getUserId(),
+            address.getId(),
+            inputDto.getName(),
+            inputDto.getPriceRange(),
+            inputDto.getPhone(),
+            inputDto.getEmail()
+        );
+        
+        // Retrieve the last inserted restaurant ID using a custom query
+        int lastInsertedId = restaurantRepository.findLastInsertedId()
+                .orElseThrow(() -> new RuntimeException("Failed to retrieve the last inserted restaurant ID"));
+
+        // Retrieve the saved restaurant using its ID
+        Restaurant savedRestaurant = restaurantRepository.findById(lastInsertedId)
+                .orElseThrow(() -> new RuntimeException("Failed to retrieve the saved restaurant"));
+
+        // Convert the saved restaurant to ApiCreateRestaurantDto
+        ApiCreateRestaurantDto responseDto = new ApiCreateRestaurantDto(
+            savedRestaurant.getId(),
+            savedRestaurant.getUserEntity().getId(),
+            savedRestaurant.getName(),
+            savedRestaurant.getPriceRange(),
+            savedRestaurant.getPhone(),
+            savedRestaurant.getEmail(),
+            new ApiAddressDto(
+                savedRestaurant.getAddress().getId(),
+                savedRestaurant.getAddress().getStreetAddress(),
+                savedRestaurant.getAddress().getCity(),
+                savedRestaurant.getAddress().getPostalCode()
+            )
+        );
+    
+        // Return the created restaurant as ApiCreateRestaurantDto
+        return Optional.of(responseDto);
+    }
+
+    // Retrieves all restaurants in the database
     public List<Restaurant> findAllRestaurants() {
         return restaurantRepository.findAll();
     }
@@ -115,74 +188,6 @@ public class RestaurantService {
             return restaurantDtos;
     }
 
-    /**
-     * Creates a new restaurant and returns its information.
-     *
-     * @param restaurant The data for the new restaurant.
-     * @return An Optional containing the created restaurant's information as an ApiCreateRestaurantDto,
-     *         or Optional.empty() if the user with the provided user ID does not exist or if an error occurs during creation.
-     */
-    @Modifying
-    @Transactional
-    public Optional<ApiCreateRestaurantDto> createRestaurant(ApiCreateRestaurantDto inputDto) {
-        // Check if user exists
-        UserEntity userEntity = userRepository.findById(inputDto.getUserId()).orElse(null);
-    
-        if (userEntity == null) {
-            // Return an empty Optional if no user exists with the given ID
-            return Optional.empty();
-        }
-    
-        // Check if address exists using AddressService
-        Address address = addressService.findById(inputDto.getAddress().getId())
-                .orElseGet(() -> {
-                    // Create a new address if it doesn't exist
-                    Address newAddress = Address.builder()
-                            .streetAddress(inputDto.getAddress().getStreetAddress())
-                            .city(inputDto.getAddress().getCity())
-                            .postalCode(inputDto.getAddress().getPostalCode())
-                            .build();
-                    return addressService.saveAddress(newAddress); // Save using AddressService
-                });
-    
-        // Use the native SQL query to save the restaurant
-        restaurantRepository.saveRestaurant(
-            inputDto.getUserId(),
-            address.getId(),
-            inputDto.getName(),
-            inputDto.getPriceRange(),
-            inputDto.getPhone(),
-            inputDto.getEmail()
-        );
-        
-        // Retrieve the last inserted restaurant ID using a custom query
-        int lastInsertedId = restaurantRepository.findLastInsertedId()
-                .orElseThrow(() -> new RuntimeException("Failed to retrieve the last inserted restaurant ID"));
-
-        // Retrieve the saved restaurant using its ID
-        Restaurant savedRestaurant = restaurantRepository.findById(lastInsertedId)
-                .orElseThrow(() -> new RuntimeException("Failed to retrieve the saved restaurant"));
-
-        // Convert the saved restaurant to ApiCreateRestaurantDto
-        ApiCreateRestaurantDto responseDto = new ApiCreateRestaurantDto(
-            savedRestaurant.getId(),
-            savedRestaurant.getUserEntity().getId(),
-            savedRestaurant.getName(),
-            savedRestaurant.getPriceRange(),
-            savedRestaurant.getPhone(),
-            savedRestaurant.getEmail(),
-            new ApiAddressDto(
-                savedRestaurant.getAddress().getId(),
-                savedRestaurant.getAddress().getStreetAddress(),
-                savedRestaurant.getAddress().getCity(),
-                savedRestaurant.getAddress().getPostalCode()
-            )
-        );
-    
-        // Return the created restaurant as ApiCreateRestaurantDto
-        return Optional.of(responseDto);
-    }
-
     // TODO
 
     /**
@@ -207,9 +212,41 @@ public class RestaurantService {
      *         or Optional.empty() if the restaurant with the specified ID is not found or if an error occurs during the update.
      */
     @Transactional
-    public Optional<ApiCreateRestaurantDto> updateRestaurant(int id, ApiCreateRestaurantDto updatedRestaurantDto) {
-        return null; // TODO return proper object
-    }
+    public ApiCreateRestaurantDto updateRestaurant(int restaurantId, String name, int priceRange, String phone) {
+
+        // Check if restaurant exists
+        if (!restaurantRepository.existsById(restaurantId)) {
+            throw new ResourceNotFoundException("Restaurant with id " + restaurantId + " not found.");
+        }
+        
+        // Validate input values
+        if (priceRange < 1 || priceRange > 3) {
+            throw new ValidationException("Invalid price range: " + priceRange);
+        }
+
+        // Perform update
+        restaurantRepository.updateRestaurant(restaurantId, name, priceRange, phone);
+
+        // Retrieve and return restaurant details
+        return restaurantRepository.findById(restaurantId)
+        .map(restaurant -> {
+            ApiCreateRestaurantDto dto = new ApiCreateRestaurantDto();
+            dto.setId(restaurant.getId());
+            dto.setUserId(restaurant.getUserEntity().getId());
+            dto.setName(restaurant.getName());
+            dto.setPriceRange(restaurant.getPriceRange());
+            dto.setPhone(restaurant.getPhone());
+            dto.setEmail(restaurant.getEmail());
+            dto.setAddress(new ApiAddressDto(
+                restaurant.getAddress().getId(),
+                restaurant.getAddress().getStreetAddress(),
+                restaurant.getAddress().getCity(),
+                restaurant.getAddress().getPostalCode()
+            ));
+            return dto;
+        })
+        .orElseThrow(() -> new ResourceNotFoundException("Restaurant with id " + restaurantId + " not found."));
+}
 
     // TODO
 

@@ -17,6 +17,26 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     List<Restaurant> findAll();
 
     /**
+     * Inserts a new restaurant into the database.
+     *
+     * @param userId      The ID of the user associated with the restaurant.
+     * @param addressId   The ID of the address associated with the restaurant.
+     * @param name        The name of the restaurant.
+     * @param priceRange  The price range of the restaurant.
+     * @param phone       The phone number of the restaurant.
+     * @param email       The email address of the restaurant.
+     */
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO restaurants (user_id, address_id, name, price_range, phone, email) VALUES (:userId, :addressId, :name, :priceRange, :phone, :email)", nativeQuery = true)
+    void saveRestaurant(@Param("userId") int userId,
+                         @Param("addressId") int addressId,
+                         @Param("name") String name,
+                         @Param("priceRange") int priceRange,
+                         @Param("phone") String phone,
+                         @Param("email") String email);
+
+    /**
      * Finds a restaurant by its ID along with the calculated average rating rounded up to the ceiling.
      *
      * @param restaurantId The ID of the restaurant to retrieve.
@@ -56,26 +76,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     List<Object[]> findRestaurantsByRatingAndPriceRange(@Param("rating") Integer rating, @Param("priceRange") Integer priceRange);
 
     /**
-     * Inserts a new restaurant into the database.
-     *
-     * @param userId      The ID of the user associated with the restaurant.
-     * @param addressId   The ID of the address associated with the restaurant.
-     * @param name        The name of the restaurant.
-     * @param priceRange  The price range of the restaurant.
-     * @param phone       The phone number of the restaurant.
-     * @param email       The email address of the restaurant.
-     */
-    @Modifying
-    @Transactional
-    @Query(value = "INSERT INTO restaurants (user_id, address_id, name, price_range, phone, email) VALUES (:userId, :addressId, :name, :priceRange, :phone, :email)", nativeQuery = true)
-    void saveRestaurant(@Param("userId") int userId,
-                         @Param("addressId") int addressId,
-                         @Param("name") String name,
-                         @Param("priceRange") int priceRange,
-                         @Param("phone") String phone,
-                         @Param("email") String email);
-    
-    /**
      * Retrieves the ID of the last inserted restaurant.
      *
      * @return An Optional containing the ID of the last inserted restaurant, or an empty Optional if no restaurant has been inserted.
@@ -92,12 +92,10 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     @Query(nativeQuery = true, value = "SELECT * FROM restaurants WHERE id = :id")
     Optional<Restaurant> findById(@Param("id") int id);
 
-    // // TODO
-    // @Modifying
-    // @Transactional
-    // @Query(nativeQuery = true)
-    // // value = "TODO Write SQL query here")
-    // void updateRestaurant(int restaurantId, String name, int priceRange, String phone);
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE restaurants SET name = :name, price_range = :priceRange, phone = :phone WHERE id = :restaurantId", nativeQuery = true)
+    void updateRestaurant(@Param("restaurantId") int restaurantId, @Param("name") String name, @Param("priceRange") int priceRange, @Param("phone") String phone);    
 
     // // TODO
     // @Query(nativeQuery = true)

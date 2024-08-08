@@ -170,7 +170,7 @@ public class RestaurantApiControllerTest {
     // Update Success
     @Test
     void testUpdateRestaurant_Success() throws Exception {
-        int restaurantId = 9;
+        int restaurantId = 1;
         String updatedName = "B12 Nation";
         int updatedPriceRange = 3;
         String updatedPhone = "2223334444";
@@ -194,7 +194,7 @@ public class RestaurantApiControllerTest {
     // Update 404 (Not Found) fail
     @Test
     void testUpdateRestaurant_NotFound() throws Exception {
-        int nonExistentId = 10;
+        int nonExistentId = 9;
         ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
         updateDto.setName("Nonexistent Restaurant");
         updateDto.setPriceRange(3);
