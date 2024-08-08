@@ -80,8 +80,13 @@ public class RestaurantApiControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    // CREATE
     @Test
     void testCreateRestaurant_Success() throws Exception {
+
         // Example request payload
         String requestBody = "{"
                 + "\"user_id\": 2,"
@@ -112,8 +117,10 @@ public class RestaurantApiControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.address.postal_code").value("H3G264"));
     }
 
+    // READ
     @Test
     public void testGetRestaurantById_Success() throws Exception {
+
         // Mock data
         int restaurantId = 1;
         String expectedName = "Schoen-Ernser";
@@ -159,28 +166,62 @@ public class RestaurantApiControllerTest {
             .andExpect(MockMvcResultMatchers.jsonPath("$.data[0].rating").value(4));
     }
 
+    // UPDATE
+    // Update Success
     @Test
-    public void testUpdateRestaurant_Success() throws Exception {
-        // Mock data
-        int restaurantId = 1;
-        ApiCreateRestaurantDto updatedData = new ApiCreateRestaurantDto();
-        updatedData.setName("Updated Name");
-        updatedData.setPriceRange(2);
-        updatedData.setPhone("555-1234");
-
-        // Mock service behavior
-        when(restaurantService.updateRestaurant(restaurantId, updatedData))
-                .thenReturn(Optional.of(updatedData));
-
-        // Validate response code and content
+    void testUpdateRestaurant_Success() throws Exception {
+        int restaurantId = 9;
+        String updatedName = "B12 Nation";
+        int updatedPriceRange = 3;
+        String updatedPhone = "2223334444";
+    
+        ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
+        updateDto.setName(updatedName);
+        updateDto.setPriceRange(updatedPriceRange);
+        updateDto.setPhone(updatedPhone);
+    
         mockMvc.perform(MockMvcRequestBuilders.put("/api/restaurants/{id}", restaurantId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(updatedData)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Success"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.id").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.name").value("Updated Name"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.price_range").value(2))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.data.phone").value("555-1234"));
+                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Success"))
+                .andExpect(jsonPath("$.data.id").value(restaurantId))
+                .andExpect(jsonPath("$.data.name").value(updatedName))
+                .andExpect(jsonPath("$.data.price_range").value(updatedPriceRange))
+                .andExpect(jsonPath("$.data.phone").value(updatedPhone));
     }
+    
+    // Update 404 (Not Found) fail
+    @Test
+    void testUpdateRestaurant_NotFound() throws Exception {
+        int nonExistentId = 10;
+        ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
+        updateDto.setName("Nonexistent Restaurant");
+        updateDto.setPriceRange(3);
+        updateDto.setPhone("0000000000");
+    
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/restaurants/{id}", nonExistentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Resource not found"))
+                .andExpect(jsonPath("$.details").value("Restaurant with id " + nonExistentId + " not found"));
+    }
+    // Update 400 (Bad Request) fail
+    @Test
+    void testUpdateRestaurant_ValidationFailed() throws Exception {
+        int restaurantId = 9;
+        ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
+        updateDto.setName("Invalid Restaurant");
+        updateDto.setPriceRange(5);  // Invalid value (should be between 1 and 3)
+        updateDto.setPhone("1111111111");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/restaurants/{id}", restaurantId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Validation failed"))
+                .andExpect(jsonPath("$.details").exists());
+}
+    // DELETE
 }

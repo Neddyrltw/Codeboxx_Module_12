@@ -95,21 +95,6 @@ public class RestaurantApiController {
          @RequestParam(name = "price_range", required = false) Integer priceRange) {
          return ResponseBuilder.buildOkResponse(restaurantService.findRestaurantsByRatingAndPriceRange(rating, priceRange));
      }
-    
-    // TODO
-
-    /**
-     * Deletes a restaurant by ID.
-     *
-     * @param id The ID of the restaurant to delete.
-     * @return ResponseEntity with a success message, or a ResourceNotFoundException if the restaurant is not found.
-     */
-    @DeleteMapping("/api/restaurants/{id}")
-    public ResponseEntity<Object> deleteRestaurant(@PathVariable int id){
-        return null; // TODO return proper object
-    }
-
-    // TODO
 
     /**
      * Updates an existing restaurant by ID.
@@ -121,6 +106,19 @@ public class RestaurantApiController {
      */
     @PutMapping("/api/restaurants/{id}")
     public ResponseEntity<Object> updateRestaurant(@PathVariable("id") int id, @Valid @RequestBody ApiCreateRestaurantDto restaurantUpdateData, BindingResult result) {
+        return null; // TODO return proper object
+    }
+    
+    // TODO
+
+    /**
+     * Deletes a restaurant by ID.
+     *
+     * @param id The ID of the restaurant to delete.
+     * @return ResponseEntity with a success message, or a ResourceNotFoundException if the restaurant is not found.
+     */
+    @DeleteMapping("/api/restaurants/{id}")
+    public ResponseEntity<Object> deleteRestaurant(@PathVariable int id){
         return null; // TODO return proper object
     }
 }
