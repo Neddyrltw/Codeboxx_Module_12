@@ -92,25 +92,28 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     @Query(nativeQuery = true, value = "SELECT * FROM restaurants WHERE id = :id")
     Optional<Restaurant> findById(@Param("id") int id);
 
+    /**
+     * Updates the details of an existing restaurant in the database.
+     *
+     * Executes a native SQL query that updates the `name`, `price_range`, and `phone` fields of the 
+     * restaurant record identified by the given `restaurantId`.
+     *
+     * This method is marked as a modifying query, indicating that it performs a data update operation.
+     * The transaction is managed at the method level, ensuring that the operation is atomic.
+     *
+     * @param restaurantId The ID of the restaurant to update. (Required)
+     * @param name         The new name for the restaurant. (Required)
+     * @param priceRange   The new price range for the restaurant. (Required)
+     * @param phone        The new phone number for the restaurant. (Required)
+     */
     @Modifying
     @Transactional
     @Query(value = "UPDATE restaurants SET name = :name, price_range = :priceRange, phone = :phone WHERE id = :restaurantId", nativeQuery = true)
-    void updateRestaurant(@Param("restaurantId") int restaurantId, @Param("name") String name, @Param("priceRange") int priceRange, @Param("phone") String phone);    
+    void updateRestaurant(@Param("restaurantId") int restaurantId, @Param("name") String name, @Param("priceRange") int priceRange, @Param("phone") String phone);
 
-    // // TODO
-    // @Query(nativeQuery = true)
-    // // value = "TODO Write SQL query here")
-    // Optional<Restaurant> findRestaurantById(@Param("restaurantId") int restaurantId);
-
-    // @Query(nativeQuery = true)
-    // // value = "SELECT LAST_INSERT_ID() AS id")
-    // int getLastInsertedId();
-
-    // // TODO
-    // @Modifying
-    // @Transactional
-    // @Query(nativeQuery = true)
-    // // value = "TODO Write SQL query here")
-    // void deleteRestaurantById(@Param("restaurantId") int restaurantId);
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM restaurants WHERE id = :restaurantId", nativeQuery = true)
+    void deleteRestaurantById(@Param("restaurantId") int restaurantId);    
 }
 

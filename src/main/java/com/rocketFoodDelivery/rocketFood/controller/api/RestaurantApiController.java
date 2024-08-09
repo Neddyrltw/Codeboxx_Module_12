@@ -105,61 +105,26 @@ public class RestaurantApiController {
      * @return ResponseEntity with the updated restaurant's data
      */
     @PutMapping("/api/restaurants/{id}")
-public ResponseEntity<Object> updateRestaurant(
-    @PathVariable("id") int id,
-    @Valid @RequestBody ApiCreateRestaurantDto restaurantUpdateData,
-    BindingResult result) {
+    public ResponseEntity<Object> updateRestaurant(
+        @PathVariable("id") int id,
+        @Valid @RequestBody ApiCreateRestaurantDto restaurantUpdateData,
+        BindingResult result) {
+    
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of(
+                    "error", "Validation failed",
+                    "details", result.getAllErrors()
+                ));
+        }
 
-    if (result.hasErrors()) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("error", "Validation failed");
-        errorResponse.put("details", result.getAllErrors());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    try {
-        ApiCreateRestaurantDto updatedRestaurant = restaurantService.updateRestaurant(
-            id,
-            restaurantUpdateData.getName(),
-            restaurantUpdateData.getPriceRange(),
-            restaurantUpdateData.getPhone()
-        );
+        ApiCreateRestaurantDto updatedRestaurant = restaurantService.updateRestaurant(id, restaurantUpdateData);
         return ResponseEntity.ok()
             .body(Map.of(
                 "message", "Success",
                 "data", updatedRestaurant
             ));
-    } catch (ResourceNotFoundException e) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "Resource not found");
-        errorResponse.put("details", e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    } catch (ValidationException e) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "Validation failed");
-        errorResponse.put("details", e.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
-}
-
-        @ExceptionHandler(ResourceNotFoundException.class)
-        @ResponseStatus(HttpStatus.NOT_FOUND)
-        public Map<String, String> handleNotFound(ResourceNotFoundException e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Resource not found");
-            errorResponse.put("details", e.getMessage());
-            return errorResponse;
-        }
-
-        @ExceptionHandler(ValidationException.class)
-        @ResponseStatus(HttpStatus.BAD_REQUEST)
-        public Map<String, String> handleValidation(ValidationException e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Validation failed");
-            errorResponse.put("details", e.getMessage());
-            return errorResponse;
-        }
-    
     
     // TODO
 
@@ -170,7 +135,13 @@ public ResponseEntity<Object> updateRestaurant(
      * @return ResponseEntity with a success message, or a ResourceNotFoundException if the restaurant is not found.
      */
     @DeleteMapping("/api/restaurants/{id}")
-    public ResponseEntity<Object> deleteRestaurant(@PathVariable int id){
-        return null; // TODO return proper object
+    public ResponseEntity<Object> deleteRestaurant(@PathVariable int id) {
+        ApiRestaurantDto deletedRestaurant = restaurantService.deleteRestaurant(id);
+        return ResponseEntity.ok()
+            .body(Map.of(
+                "message", "Success",
+                "data", deletedRestaurant
+            ));
     }
 }
+

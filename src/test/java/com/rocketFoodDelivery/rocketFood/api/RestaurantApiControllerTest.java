@@ -122,10 +122,10 @@ public class RestaurantApiControllerTest {
     public void testGetRestaurantById_Success() throws Exception {
 
         // Mock data
-        int restaurantId = 1;
-        String expectedName = "Schoen-Ernser";
+        int restaurantId = 2;
+        String expectedName = "Weimann, Brakus and Upton";
         int expectedPriceRange = 3;
-        int expectedRating = 3;
+        int expectedRating = 4;
 
         // Create a Restaurant DTO
         ApiRestaurantDto mockRestaurant = new ApiRestaurantDto(restaurantId, expectedName, expectedPriceRange, expectedRating);
@@ -188,11 +188,11 @@ public class RestaurantApiControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("Success"))
             .andExpect(jsonPath("$.data.id").value(restaurantId))
-            .andExpect(jsonPath("$.data.name").value(updatedName))
-            .andExpect(jsonPath("$.data.price_range").value(updatedPriceRange))
-            .andExpect(jsonPath("$.data.phone").value(updatedPhone));
+            .andExpect(jsonPath("$.data.name").value(expectedName))
+            .andExpect(jsonPath("$.data.price_range").value(expectedPriceRange))
+            .andExpect(jsonPath("$.data.rating").value(expectedRating))
+            .andExpect(jsonPath("$.message").value("Success"));
     }
     
     // Update 404 (Not Found) fail
@@ -241,22 +241,27 @@ public class RestaurantApiControllerTest {
     @Test
     void testDeleteRestaurant_Success() throws Exception {
         // Mock data
-        int restaurantId = 1;
-
+        int restaurantId = 19;
+    
         // Mock service behavior
         ApiRestaurantDto deleteDto = new ApiRestaurantDto();
-        deleteDto.setName("Schoen-Ernser");
-        deleteDto.setPriceRange(3);
-        deleteDto.setRating(3);
-
+        deleteDto.setId(restaurantId); // Ensure ID is set
+        deleteDto.setName("Villa Wellington");
+        deleteDto.setPriceRange(2);
+        deleteDto.setRating(0);
+    
+        // Assuming `restaurantService.deleteRestaurant` is mocked
+        when(restaurantService.deleteRestaurant(restaurantId)).thenReturn(deleteDto);
+    
         // Mock DELETE request and validate response
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/restaurants/{id}", restaurantId)
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.message").value("Success"))
-            .andExpect(jsonPath("$.data.id").value(restaurantId))
-            .andExpect(jsonPath("$.data.name").value("Schoen-Ernser"))
-            .andExpect(jsonPath("$.data.price_range").value(3))
-            .andExpect(jsonPath("$.data.rating").value(3));
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Success"))
+                .andExpect(jsonPath("$.data.id").value(restaurantId))
+                .andExpect(jsonPath("$.data.name").value("Villa Wellington"))
+                .andExpect(jsonPath("$.data.price_range").value(2)) 
+                .andExpect(jsonPath("$.data.rating").value(0));
     }
+    
 }

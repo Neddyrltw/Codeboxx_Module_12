@@ -136,13 +136,14 @@ public class RestaurantService {
      */
     public Optional<ApiRestaurantDto> findRestaurantWithAverageRatingById(int id) {
         List<Object[]> restaurant = restaurantRepository.findRestaurantWithAverageRatingById(id);
-
+    
         if (!restaurant.isEmpty()) {
             Object[] row = restaurant.get(0);
             int restaurantId = (int) row[0];
             String name = (String) row[1];
             int priceRange = (int) row[2];
-            double rating = (row[3] != null) ? ((BigDecimal) row[3]).setScale(1, RoundingMode.HALF_UP).doubleValue() : 0.0;
+            BigDecimal ratingBigDecimal = (BigDecimal) row[3];
+            double rating = (ratingBigDecimal != null) ? ratingBigDecimal.setScale(1, RoundingMode.HALF_UP).doubleValue() : 0.0;
             int roundedRating = (int) Math.ceil(rating);
             ApiRestaurantDto restaurantDto = new ApiRestaurantDto(restaurantId, name, priceRange, roundedRating);
             return Optional.of(restaurantDto);
@@ -150,6 +151,7 @@ public class RestaurantService {
             return Optional.empty();
         }
     }
+    
 
     /**
      * Finds restaurants based on the provided rating and price range.
@@ -212,41 +214,46 @@ public class RestaurantService {
      *         or Optional.empty() if the restaurant with the specified ID is not found or if an error occurs during the update.
      */
     @Transactional
-    public ApiCreateRestaurantDto updateRestaurant(int restaurantId, String name, int priceRange, String phone) {
-
+    public ApiCreateRestaurantDto updateRestaurant(int restaurantId, ApiCreateRestaurantDto restaurantUpdateData) {
+    
         // Check if restaurant exists
         if (!restaurantRepository.existsById(restaurantId)) {
             throw new ResourceNotFoundException("Restaurant with id " + restaurantId + " not found.");
         }
         
         // Validate input values
-        if (priceRange < 1 || priceRange > 3) {
-            throw new ValidationException("Invalid price range: " + priceRange);
+        if (restaurantUpdateData.getPriceRange() < 1 || restaurantUpdateData.getPriceRange() > 3) {
+            throw new ValidationException("Invalid price range: " + restaurantUpdateData.getPriceRange());
         }
-
+    
         // Perform update
-        restaurantRepository.updateRestaurant(restaurantId, name, priceRange, phone);
-
-        // Retrieve and return restaurant details
+        restaurantRepository.updateRestaurant(
+            restaurantId,
+            restaurantUpdateData.getName(),
+            restaurantUpdateData.getPriceRange(),
+            restaurantUpdateData.getPhone()
+        );
+    
+        // Return updated restaurant details
         return restaurantRepository.findById(restaurantId)
-        .map(restaurant -> {
-            ApiCreateRestaurantDto dto = new ApiCreateRestaurantDto();
-            dto.setId(restaurant.getId());
-            dto.setUserId(restaurant.getUserEntity().getId());
-            dto.setName(restaurant.getName());
-            dto.setPriceRange(restaurant.getPriceRange());
-            dto.setPhone(restaurant.getPhone());
-            dto.setEmail(restaurant.getEmail());
-            dto.setAddress(new ApiAddressDto(
-                restaurant.getAddress().getId(),
-                restaurant.getAddress().getStreetAddress(),
-                restaurant.getAddress().getCity(),
-                restaurant.getAddress().getPostalCode()
-            ));
-            return dto;
-        })
-        .orElseThrow(() -> new ResourceNotFoundException("Restaurant with id " + restaurantId + " not found."));
-}
+            .map(updatedRestaurant -> {
+                ApiCreateRestaurantDto dto = new ApiCreateRestaurantDto();
+                dto.setId(updatedRestaurant.getId());
+                dto.setUserId(updatedRestaurant.getUserEntity().getId());
+                dto.setName(updatedRestaurant.getName());
+                dto.setPriceRange(updatedRestaurant.getPriceRange());
+                dto.setPhone(updatedRestaurant.getPhone());
+                dto.setEmail(updatedRestaurant.getEmail());
+                dto.setAddress(new ApiAddressDto(
+                    updatedRestaurant.getAddress().getId(),
+                    updatedRestaurant.getAddress().getStreetAddress(),
+                    updatedRestaurant.getAddress().getCity(),
+                    updatedRestaurant.getAddress().getPostalCode()
+                ));
+                return dto;
+            })
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant with id " + restaurantId + " not found."));
+    }    
 
     // TODO
 
@@ -256,7 +263,37 @@ public class RestaurantService {
      * @param restaurantId The ID of the restaurant to delete.
      */
     @Transactional
-    public void deleteRestaurant(int restaurantId) {
-        return;
+public ApiRestaurantDto deleteRestaurant(int restaurantId) {
+    // Fetch restaurant details and rating
+    List<Object[]> results = restaurantRepository.findRestaurantWithAverageRatingById(restaurantId);
+
+    if (results.isEmpty()) {
+        throw new ResourceNotFoundException("Restaurant with id: " + restaurantId + " not found");
     }
+
+    // Retrieve restaurant details
+    Object[] result = results.get(0);
+    int id = (Integer) result[0];
+    String name = (String) result[1];
+    int priceRange = (Integer) result[2];
+    System.out.println(priceRange);
+    
+    // Handle rating conversion from BigDecimal to int
+    BigDecimal ratingBigDecimal = (BigDecimal) result[3];
+    double ratingDouble = (ratingBigDecimal != null) ? ratingBigDecimal.setScale(1, RoundingMode.HALF_UP).doubleValue() : 0.0;
+    int roundedRating = (int) Math.ceil(ratingDouble);
+
+    // Delete the restaurant
+    restaurantRepository.deleteRestaurantById(restaurantId);
+
+    // Prepare the response data
+    ApiRestaurantDto responseDto = new ApiRestaurantDto();
+    responseDto.setId(id);
+    responseDto.setName(name);
+    responseDto.setPriceRange(priceRange);
+    responseDto.setRating(roundedRating);
+
+    return responseDto;
+}
+
 }
