@@ -152,7 +152,6 @@ public class RestaurantService {
         }
     }
     
-
     /**
      * Finds restaurants based on the provided rating and price range.
      *
@@ -190,8 +189,6 @@ public class RestaurantService {
             return restaurantDtos;
     }
 
-    // TODO
-
     /**
      * Finds a restaurant by its ID.
      *
@@ -202,8 +199,6 @@ public class RestaurantService {
     public Optional<Restaurant> findById(int id) {
         return null; // TODO return proper object
     }
-
-    // TODO
 
     /**
      * Updates an existing restaurant by ID with the provided data.
@@ -255,45 +250,43 @@ public class RestaurantService {
             .orElseThrow(() -> new ResourceNotFoundException("Restaurant with id " + restaurantId + " not found."));
     }    
 
-    // TODO
-
     /**
      * Deletes a restaurant along with its associated data, including its product orders, orders and products.
      *
      * @param restaurantId The ID of the restaurant to delete.
      */
     @Transactional
-public ApiRestaurantDto deleteRestaurant(int restaurantId) {
-    // Fetch restaurant details and rating
-    List<Object[]> results = restaurantRepository.findRestaurantWithAverageRatingById(restaurantId);
+    public ApiRestaurantDto deleteRestaurant(int restaurantId) {
+        // Fetch restaurant details and rating
+        List<Object[]> results = restaurantRepository.findRestaurantWithAverageRatingById(restaurantId);
 
-    if (results.isEmpty()) {
-        throw new ResourceNotFoundException("Restaurant with id: " + restaurantId + " not found");
+        if (results.isEmpty()) {
+            throw new ResourceNotFoundException("Restaurant with id: " + restaurantId + " not found");
+        }
+
+        // Retrieve restaurant details
+        Object[] result = results.get(0);
+        int id = (Integer) result[0];
+        String name = (String) result[1];
+        int priceRange = (Integer) result[2];
+        System.out.println(priceRange);
+
+        // Handle rating conversion from BigDecimal to int
+        BigDecimal ratingBigDecimal = (BigDecimal) result[3];
+        double ratingDouble = (ratingBigDecimal != null) ? ratingBigDecimal.setScale(1, RoundingMode.HALF_UP).doubleValue() : 0.0;
+        int roundedRating = (int) Math.ceil(ratingDouble);
+
+        // Delete the restaurant
+        restaurantRepository.deleteRestaurantById(restaurantId);
+
+        // Prepare the response data
+        ApiRestaurantDto responseDto = new ApiRestaurantDto();
+        responseDto.setId(id);
+        responseDto.setName(name);
+        responseDto.setPriceRange(priceRange);
+        responseDto.setRating(roundedRating);
+
+        return responseDto;
     }
-
-    // Retrieve restaurant details
-    Object[] result = results.get(0);
-    int id = (Integer) result[0];
-    String name = (String) result[1];
-    int priceRange = (Integer) result[2];
-    System.out.println(priceRange);
-    
-    // Handle rating conversion from BigDecimal to int
-    BigDecimal ratingBigDecimal = (BigDecimal) result[3];
-    double ratingDouble = (ratingBigDecimal != null) ? ratingBigDecimal.setScale(1, RoundingMode.HALF_UP).doubleValue() : 0.0;
-    int roundedRating = (int) Math.ceil(ratingDouble);
-
-    // Delete the restaurant
-    restaurantRepository.deleteRestaurantById(restaurantId);
-
-    // Prepare the response data
-    ApiRestaurantDto responseDto = new ApiRestaurantDto();
-    responseDto.setId(id);
-    responseDto.setName(name);
-    responseDto.setPriceRange(priceRange);
-    responseDto.setRating(roundedRating);
-
-    return responseDto;
-}
 
 }

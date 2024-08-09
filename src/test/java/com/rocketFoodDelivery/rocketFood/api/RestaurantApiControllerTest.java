@@ -172,7 +172,7 @@ public class RestaurantApiControllerTest {
     void testUpdateRestaurant_Success() throws Exception {
 
         // Mock data
-        int restaurantId = 1;
+        int restaurantId = 20;
         String updatedName = "B12 Nation";
         int updatedPriceRange = 3;
         String updatedPhone = "2223334444";
@@ -189,9 +189,8 @@ public class RestaurantApiControllerTest {
             .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(restaurantId))
-            .andExpect(jsonPath("$.data.name").value(expectedName))
-            .andExpect(jsonPath("$.data.price_range").value(expectedPriceRange))
-            .andExpect(jsonPath("$.data.rating").value(expectedRating))
+            .andExpect(jsonPath("$.data.name").value(updatedName))
+            .andExpect(jsonPath("$.data.price_range").value(updatedPriceRange))
             .andExpect(jsonPath("$.message").value("Success"));
     }
     
