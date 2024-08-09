@@ -77,4 +77,8 @@ public class UserEntity implements UserDetails {
     public boolean isEmployee() {
         return isEmployee;
     }
+
+    public int getId() {
+        return id;
+    }
 }
