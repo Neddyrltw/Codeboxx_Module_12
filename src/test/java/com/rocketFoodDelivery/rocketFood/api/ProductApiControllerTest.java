@@ -17,9 +17,7 @@ import java.util.Optional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
-// ASSERT ARRAYS
-import org.assertj.core.util.Arrays;
+import java.util.Arrays;
 
 // JUNIT TEST IMPORT
 import org.junit.jupiter.api.Test;
@@ -91,32 +89,37 @@ public class ProductApiControllerTest {
     @Test
     void testGetProductsByRestaurant_Success() throws Exception {
         int restaurantId = 5;
-        List<ApiProductDTO> mockProducts = Arrays.asList(
-            new ApiProductDTO(1, "Cheeseburger", 525),
-            new ApiProductDTO(2, "Fries", 200)
-        );
-    
-        when(productService.findByRestaurantId(restaurantId)).thenReturn(mockProducts);
-    
+        ApiProductDTO product1 = new ApiProductDTO(25, "Meatballs with Sauce", 400, "Description for Product 4", restaurantId);
+        ApiProductDTO product2 = new ApiProductDTO(26, "Ebiten maki", 400, "Description for Product 4", restaurantId);
+
+        List<ApiProductDTO> products = Arrays.asList(product1, product2);
+
+        when(productService.findProductsByRestaurant(restaurantId)).thenReturn(products);
+
         mockMvc.perform(MockMvcRequestBuilders.get("/api/products")
                 .param("restaurant", String.valueOf(restaurantId))
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Cheeseburger"))
-                .andExpect(jsonPath("$[0].cost").value(525))
-                .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].name").value("Fries"))
-                .andExpect(jsonPath("$[1].cost").value(200));
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(25))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value("Meatballs with Sauce"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].cost").value(400))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value("Description for Product 4"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].restaurantId").value(restaurantId)) 
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].id").value(26))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].name").value("Ebiten maki"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].cost").value(400))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].description").value("Description for Product 4"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].restaurantId").value(restaurantId));
     }
+
 
     @Test
     void testGetProductsByRestaurant_InvalidParameters() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/products")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Invalid or missing parameters"))
-            .andExpect(jsonPath("$.details").value(nullValue()));
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Invalid or missing parameters"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.details").value(nullValue()));
     }
 
 

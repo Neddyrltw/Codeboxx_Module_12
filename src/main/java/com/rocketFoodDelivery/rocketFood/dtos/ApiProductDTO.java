@@ -1,10 +1,15 @@
 package com.rocketFoodDelivery.rocketFood.dtos;
 
+import jakarta.persistence.Column;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class ApiProductDTO {
-    int id;
-    String name;
-    int cost;
+    private int id;
+    private String name;
+    private int cost;
+    private String description;
+    private int restaurantId;
 }
