@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.rocketFoodDelivery.rocketFood.dtos.ApiErrorDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiProductDTO;
 import com.rocketFoodDelivery.rocketFood.service.ProductService;
 
@@ -23,7 +24,13 @@ public class ProductApiController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ApiProductDTO>> getProductsByRestaurant(@RequestParam("restaurant") int restaurantId) {
+    public ResponseEntity<?> getProductsByRestaurant(@RequestParam(value = "restaurant", required = false) Integer restaurantId) {
+        // Validate restaurantId parameter
+        if (restaurantId == null || restaurantId <= 0) {
+            ApiErrorDTO error = new ApiErrorDTO("Invalid or missing parameters", null);
+            return ResponseEntity.badRequest().body(error);
+        }
+    
         List<ApiProductDTO> products = productService.findProductsByRestaurant(restaurantId);
         return ResponseEntity.ok(products);
     }
