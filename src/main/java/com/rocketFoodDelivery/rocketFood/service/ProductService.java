@@ -49,4 +49,13 @@ public class ProductService {
 
         return products;
     }
+
+    /**
+     * Deletes all products associated with a specific restaurant by the restaurant's ID.
+     *
+     * @param restaurantId The ID of the restaurant whose products are to be deleted.
+     */
+    public void deleteProductsByRestaurantId(int restaurantId) {
+        productRepository.deleteProductsByRestaurantId(restaurantId);
+    }
 }
