@@ -7,6 +7,7 @@ import com.rocketFoodDelivery.rocketFood.exception.BadRequestException;
 import com.rocketFoodDelivery.rocketFood.exception.ResourceNotFoundException;
 import com.rocketFoodDelivery.rocketFood.repository.OrderRepository;
 import com.rocketFoodDelivery.rocketFood.models.Order;
+import com.rocketFoodDelivery.rocketFood.models.OrderStatus;
 import com.rocketFoodDelivery.rocketFood.models.ProductOrder;
 
 import java.util.List;
@@ -21,6 +22,8 @@ public class OrderService {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired OrderStatusService orderStatusService;
 
     @Autowired
     private AddressService addressService;
@@ -40,13 +43,17 @@ public class OrderService {
      * @throws ResourceNotFoundException if the order with the given ID is not found.
      */
     public ApiOrderStatusDTO updateOrderStatus(int orderId, String newStatus) {
+
         // Find the order by id or throw error
         Order order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order with id " + orderId + " not found"));
 
-        // Update order status
-        order.getOrder_status().setName(newStatus);
+        // Find the new OrderStatus by name or throw error
+        OrderStatus orderStatus = orderStatusService.findByName(newStatus)
+        .orElseThrow(() -> new ResourceNotFoundException("Order status " + newStatus + " not found"));
 
+        // Update order status
+        order.setOrder_status(orderStatus);
         // Save order status
         orderRepository.save(order);
 

@@ -57,7 +57,7 @@ public class OrdersApiControllerTest {
 
         // Mock data
         int orderId = 2;
-        String updatedStatus = "delivered";
+        String updatedStatus = "in progress";
 
         ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
         statusDTO.setStatus(updatedStatus);
@@ -97,8 +97,8 @@ public class OrdersApiControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody))
             .andExpect(MockMvcResultMatchers.status().isNotFound())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Order not found"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.details").value("Order with id " + orderId + " not found."));
+            .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Resource not found"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.details").value("Order with id " + orderId + " not found"));
     }
 
     @Test
