@@ -35,8 +35,13 @@ public class ProductOrder {
 
     @Min(1)
     private Integer product_quantity;
+    
     @Min(0)
     private Integer product_unit_cost;
+
+    public Integer getTotalCost() {
+        return product_quantity * product_unit_cost;
+    }
 
     @PrePersist
     private void validateBeforePersist() {

@@ -1,6 +1,5 @@
 package com.rocketFoodDelivery.rocketFood.dtos;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

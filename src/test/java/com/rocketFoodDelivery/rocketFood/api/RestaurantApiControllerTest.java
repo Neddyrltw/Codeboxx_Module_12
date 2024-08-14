@@ -134,7 +134,7 @@ public class RestaurantApiControllerTest {
         when(restaurantService.findRestaurantWithAverageRatingById(restaurantId)).thenReturn(Optional.of(mockRestaurant));
 
         // Perform GET request and assert response
-        mockMvc.perform(get("/api/restaurants/{id}", restaurantId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/restaurants/{id}", restaurantId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(restaurantId))
                 .andExpect(jsonPath("$.data.name").value(expectedName))

@@ -1,6 +1,5 @@
 package com.rocketFoodDelivery.rocketFood.repository;
 
-import com.rocketFoodDelivery.rocketFood.models.Order;
 import com.rocketFoodDelivery.rocketFood.models.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

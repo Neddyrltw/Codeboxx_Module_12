@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
+
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -34,7 +37,6 @@ public class Order {
 
     @ManyToOne(cascade = CascadeType.REMOVE)
     @OnDelete(action = OnDeleteAction.CASCADE)
-
     @JoinColumn(name = "status_id", nullable = false)
     private OrderStatus order_status ;
 
@@ -47,4 +49,16 @@ public class Order {
     @Min(1)
     @Max(5)
     private int restaurant_rating;
+
+    // Establish relationship with ProductOrder
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductOrder> products;
+
+    public List<ProductOrder> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<ProductOrder> products) {
+        this.products = products;
+    }
 }

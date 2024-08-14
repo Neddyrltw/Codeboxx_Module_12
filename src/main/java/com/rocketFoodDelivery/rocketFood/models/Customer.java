@@ -37,4 +37,8 @@ public class Customer {
     @Email
     @Column(nullable = false)
     private String email;
+
+    public String getName() {
+        return userEntity.getName();
+    }
 }
