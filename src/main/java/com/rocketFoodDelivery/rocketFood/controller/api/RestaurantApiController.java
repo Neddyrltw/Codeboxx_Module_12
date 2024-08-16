@@ -15,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -73,8 +74,15 @@ public class RestaurantApiController {
     @GetMapping("/api/restaurants/{id}")
     public ResponseEntity<Object> getRestaurantById(@PathVariable int id) {
         Optional<ApiRestaurantDto> restaurantWithRatingOptional = restaurantService.findRestaurantWithAverageRatingById(id);
-        if (!restaurantWithRatingOptional.isPresent()) throw new ResourceNotFoundException(String.format("Restaurant with id %d not found", id));
-        return ResponseEntity.ok(restaurantWithRatingOptional.get());
+        if (!restaurantWithRatingOptional.isPresent()) {
+            throw new ResourceNotFoundException(String.format("Restaurant with id %d not found", id));
+        }
+        
+        // Prepare response
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", restaurantWithRatingOptional.get());
+        
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -91,7 +99,14 @@ public class RestaurantApiController {
      public ResponseEntity<Object> getAllRestaurants(
          @RequestParam(name = "rating", required = false) Integer rating,
          @RequestParam(name = "price_range", required = false) Integer priceRange) {
-         return ResponseEntity.ok(restaurantService.findRestaurantsByRatingAndPriceRange(rating, priceRange));
+            List<ApiRestaurantDto> restaurants = restaurantService.findRestaurantsByRatingAndPriceRange(rating, priceRange);
+
+        // Prepare response
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Success");
+        response.put("data", restaurants);
+        
+        return ResponseEntity.ok(response);
      }
 
     /**
@@ -123,8 +138,6 @@ public class RestaurantApiController {
                 "data", updatedRestaurant
             ));
     }
-    
-    // TODO
 
     /**
      * Deletes a restaurant by ID.

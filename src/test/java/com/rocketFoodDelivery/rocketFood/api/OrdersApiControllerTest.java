@@ -9,7 +9,6 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -147,7 +146,7 @@ public void createOrder_Success() throws Exception {
         when(orderService.getOrdersByTypeAndId("customer", 5)).thenReturn(Arrays.asList(order1, order2));
 
         // Perform GET request and assert response
-        mockMvc.perform(get("/api/order")
+        mockMvc.perform(get("/api/orders")
         .param("type", "customer")
         .param("id", "5")
         .contentType(MediaType.APPLICATION_JSON))
@@ -176,7 +175,7 @@ public void createOrder_Success() throws Exception {
         String requestBody = objectMapper.writeValueAsString(statusDTO);
 
         // Perform POST request and assert value
-        mockMvc.perform(post("/api/order/{order_id}/status", orderId)
+        mockMvc.perform(post("/api/orders/{order_id}/status", orderId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody))
             .andExpect(status().isOk())
@@ -186,7 +185,7 @@ public void createOrder_Success() throws Exception {
     @Test
     public void updateOrderStatus_NotFound() throws Exception {
         // Mock data
-        int orderId = 51;
+        int orderId = 62;
         String updatedStatus = "in progress";
 
         ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
@@ -200,7 +199,7 @@ public void createOrder_Success() throws Exception {
         String requestBody = objectMapper.writeValueAsString(statusDTO);
 
         // Perform POST request and assert not found response
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/order/{order_id}/status", orderId)
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/orders/{order_id}/status", orderId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody))
             .andExpect(MockMvcResultMatchers.status().isNotFound())
@@ -222,7 +221,7 @@ public void createOrder_Success() throws Exception {
         String requestBody = objectMapper.writeValueAsString(statusDTO);
 
         // Perform POST request and assert bad request response
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/order/{order_id}/status", orderId)
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/orders/{order_id}/status", orderId)
         .contentType(MediaType.APPLICATION_JSON)
         .content(requestBody))
         .andExpect(MockMvcResultMatchers.status().isBadRequest())

@@ -149,14 +149,15 @@ public class RestaurantApiControllerTest {
 
     // UPDATE
     // Update Success
+    @Transactional
     @Test
     void testUpdateRestaurant_Success() throws Exception {
 
         // Mock data
-        int restaurantId = 20;
-        String updatedName = "B12 Nation";
+        int restaurantId = 12;
+        String updatedName = "Fart Nation";
         int updatedPriceRange = 3;
-        String updatedPhone = "2223334444";
+        String updatedPhone = "1234567890";
     
         // Mocks service behavior
         ApiCreateRestaurantDto updateDto = new ApiCreateRestaurantDto();
@@ -218,10 +219,11 @@ public class RestaurantApiControllerTest {
                 .andExpect(jsonPath("$.details").exists());
 }
     // DELETE
+    @Transactional
     @Test
     void testDeleteRestaurant_Success() throws Exception {
         // Mock data
-        int restaurantId = 24;
+        int restaurantId = 26;
     
         // Mock service behavior
         ApiRestaurantDto deleteDto = new ApiRestaurantDto();

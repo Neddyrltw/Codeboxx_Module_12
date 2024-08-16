@@ -26,7 +26,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 // JACKSON DATABIND IMPORT
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rocketFoodDelivery.rocketFood.controller.api.ProductApiController;
 
 // PROJECT IMPORTS
@@ -84,8 +83,6 @@ public class ProductApiControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Invalid or missing parameters"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.details").value(nullValue()));
     }
-
-
 
     // UPDATE
 

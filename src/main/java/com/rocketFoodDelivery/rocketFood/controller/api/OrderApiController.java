@@ -93,9 +93,12 @@ public class OrderApiController {
         @PathVariable("order_id") int orderId,
         @Validated @RequestBody ApiOrderStatusDTO statusDTO) {
         
+        System.out.println("Received request to update order status for orderId: " + orderId);
+        System.out.println("New status: " + statusDTO.getStatus());
+
         // Update order status
         ApiOrderStatusDTO updatedStatusDTO = orderService.updateOrderStatus(orderId, statusDTO.getStatus());
         
-        return new ResponseEntity<>(updatedStatusDTO, HttpStatus.OK);
+        return ResponseEntity.ok(updatedStatusDTO);
     } 
 }
