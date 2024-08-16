@@ -4,7 +4,6 @@ import com.rocketFoodDelivery.rocketFood.dtos.ApiCreateRestaurantDto;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiErrorDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiRestaurantDto;
 import com.rocketFoodDelivery.rocketFood.service.RestaurantService;
-import com.rocketFoodDelivery.rocketFood.util.ResponseBuilder;
 import com.rocketFoodDelivery.rocketFood.exception.*;
 
 import jakarta.validation.Valid;
@@ -23,7 +22,6 @@ import java.util.Optional;
 public class RestaurantApiController {
     private RestaurantService restaurantService;
 
-    @Autowired
     public RestaurantApiController(RestaurantService restaurantService) {
         this.restaurantService = restaurantService;
     }
@@ -76,7 +74,7 @@ public class RestaurantApiController {
     public ResponseEntity<Object> getRestaurantById(@PathVariable int id) {
         Optional<ApiRestaurantDto> restaurantWithRatingOptional = restaurantService.findRestaurantWithAverageRatingById(id);
         if (!restaurantWithRatingOptional.isPresent()) throw new ResourceNotFoundException(String.format("Restaurant with id %d not found", id));
-        return ResponseBuilder.buildOkResponse(restaurantWithRatingOptional.get());
+        return ResponseEntity.ok(restaurantWithRatingOptional.get());
     }
 
     /**
@@ -93,7 +91,7 @@ public class RestaurantApiController {
      public ResponseEntity<Object> getAllRestaurants(
          @RequestParam(name = "rating", required = false) Integer rating,
          @RequestParam(name = "price_range", required = false) Integer priceRange) {
-         return ResponseBuilder.buildOkResponse(restaurantService.findRestaurantsByRatingAndPriceRange(rating, priceRange));
+         return ResponseEntity.ok(restaurantService.findRestaurantsByRatingAndPriceRange(rating, priceRange));
      }
 
     /**

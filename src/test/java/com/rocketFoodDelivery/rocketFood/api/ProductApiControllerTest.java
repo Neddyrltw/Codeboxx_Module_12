@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rocketFoodDelivery.rocketFood.controller.api.ProductApiController;
 
 // PROJECT IMPORTS
-
 import com.rocketFoodDelivery.rocketFood.dtos.ApiProductDTO;
 import com.rocketFoodDelivery.rocketFood.service.ProductService;
 
@@ -46,9 +45,6 @@ public class ProductApiControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     // CREATE
 

@@ -6,63 +6,115 @@ import com.rocketFoodDelivery.rocketFood.dtos.ApiProductForOrderApiDTO;
 import com.rocketFoodDelivery.rocketFood.exception.BadRequestException;
 import com.rocketFoodDelivery.rocketFood.exception.ResourceNotFoundException;
 import com.rocketFoodDelivery.rocketFood.repository.OrderRepository;
+import com.rocketFoodDelivery.rocketFood.repository.ProductRepository;
+import com.rocketFoodDelivery.rocketFood.repository.RestaurantRepository;
+import com.rocketFoodDelivery.rocketFood.models.Customer;
 import com.rocketFoodDelivery.rocketFood.models.Order;
 import com.rocketFoodDelivery.rocketFood.models.OrderStatus;
+import com.rocketFoodDelivery.rocketFood.models.Product;
 import com.rocketFoodDelivery.rocketFood.models.ProductOrder;
+import com.rocketFoodDelivery.rocketFood.models.Restaurant;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
 public class OrderService {
 
-    @Autowired
-    private OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
+    private final OrderStatusService orderStatusService;
+    private final CustomerService customerService;
+    private final RestaurantService restaurantService;
+    private final ProductRepository productRepository;
+    private final AddressService addressService;
+    private final RestaurantRepository restaurantRepository;
 
-    @Autowired OrderStatusService orderStatusService;
+    public OrderService(OrderRepository orderRepository, OrderStatusService orderStatusService, 
+                        CustomerService customerService, RestaurantService restaurantService,
+                        ProductRepository productRepository, AddressService addressService,
+                        RestaurantRepository restaurantRepository) {  
+        this.orderRepository = orderRepository;
+        this.orderStatusService = orderStatusService;
+        this.customerService = customerService;
+        this.restaurantService = restaurantService;
+        this.productRepository = productRepository;
+        this.addressService = addressService;
+        this.restaurantRepository = restaurantRepository;
+    }
 
-    @Autowired
-    private AddressService addressService;
+    // CREATE
 
     /**
-     * Updates the status of an order by its ID.
-     *
-     * This method performs the following steps:
-     * 1. Retrieves the order by its ID. If the order does not exist, throws a ResourceNotFoundException.
-     * 2. Updates the status of the order by setting the `name` field of the associated `OrderStatus` entity.
-     * 3. Saves the updated order back to the database.
-     * 4. Constructs an `ApiOrderStatusDTO` containing the updated status and returns it.
-     *
-     * @param orderId   The ID of the order to update.
-     * @param newStatus The new status to set for the order.
-     * @return An `ApiOrderStatusDTO` containing the updated status of the order.
-     * @throws ResourceNotFoundException if the order with the given ID is not found.
-     */
-    public ApiOrderStatusDTO updateOrderStatus(int orderId, String newStatus) {
+ * Creates a new order based on the provided `ApiOrderDTO`.
+ *
+ * This method performs the following steps:
+ * 1. Retrieves the customer by their ID from the `ApiOrderDTO`. If the customer does not exist, throws a `ResourceNotFoundException`.
+ * 2. Retrieves the restaurant by its ID from the `ApiOrderDTO`. If the restaurant does not exist, throws a `ResourceNotFoundException`.
+ * 3. Fetches the `OrderStatus` for the new order, defaulting to "in progress". If the status does not exist, throws a `ResourceNotFoundException`.
+ * 4. Creates a new `Order` entity, associating it with the retrieved customer, restaurant, and order status.
+ * 5. Iterates through the product details provided in the `ApiOrderDTO`, fetching each `Product` by its ID. If a product is not found, throws a `ResourceNotFoundException`.
+ * 6. Constructs `ProductOrder` entities for each product, linking them to the new `Order` and setting their quantity and unit cost.
+ * 7. Associates the list of `ProductOrder` entities with the newly created `Order`.
+ * 8. Saves the new `Order` entity to the database.
+ * 9. Maps the saved `Order` to an `ApiOrderDTO` and returns it.
+ *
+ * @param apiOrderDTO The data transfer object containing the details of the order to be created.
+ * @return An `ApiOrderDTO` containing the details of the newly created order.
+ * @throws ResourceNotFoundException if the customer, restaurant, product, or order status specified in the DTO does not exist.
+ */
+@Transactional
+public ApiOrderDTO createOrder(ApiOrderDTO apiOrderDTO) {
+    // Fetch the customer by ID
+    Customer customer = customerService.findById(apiOrderDTO.getCustomer_id())
+            .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
-        // Find the order by id or throw error
-        Order order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new ResourceNotFoundException("Order with id " + orderId + " not found"));
+    // Fetch the restaurant by ID
+    Restaurant restaurant = restaurantService.findById(apiOrderDTO.getRestaurant_id())
+            .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found"));
 
-        // Find the new OrderStatus by name or throw error
-        OrderStatus orderStatus = orderStatusService.findByName(newStatus)
-        .orElseThrow(() -> new ResourceNotFoundException("Order status " + newStatus + " not found"));
+    // Fetch the order status by name
+    OrderStatus orderStatus = orderStatusService.findByName("in progress")
+            .orElseThrow(() -> new ResourceNotFoundException("Order status not found"));
 
-        // Update order status
-        order.setOrder_status(orderStatus);
-        // Save order status
-        orderRepository.save(order);
+    // Retrieve the restaurant rating using existing logic
+    Integer restaurantRating = getRestaurantRating(restaurant.getId());
 
-        // Create and return a DTO with updated status
-        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
-        statusDTO.setStatus(newStatus);
+    // Create a new Order entity
+    Order newOrder = Order.builder()
+        .customer(customer)
+        .restaurant(restaurant)
+        .order_status(orderStatus)
+        .restaurant_rating(restaurantRating)
+        .build();
 
-        return statusDTO;
-    }
+    // Attach products
+    List<ProductOrder> productOrders = apiOrderDTO.getProducts().stream()
+            .map(dto -> {
+                Product product = productRepository.findById(dto.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+                return ProductOrder.builder()
+                        .product(product)
+                        .order(newOrder)
+                        .product_quantity(dto.getQuantity())
+                        .product_unit_cost(product.getCost())
+                        .build();
+            })
+            .collect(Collectors.toList());
+
+    newOrder.setProducts(productOrders);
+
+    // Save the new order
+    orderRepository.save(newOrder);
+
+    // Create and return a DTO with the newly created order's information
+    return mapToApiOrderDTO(newOrder);
+}
+    
+    // RETRIEVE
 
     /**
      * Retrieves a list of orders based on the user type and ID.
@@ -113,6 +165,26 @@ public class OrderService {
     }
 
     /**
+     * Retrieves an order by its ID and maps it to an `ApiOrderDTO` object.
+     *
+     * This method performs the following steps:
+     * 1. Fetches the `Order` entity from the database using the provided order ID.
+     * 2. If the order is not found, throws a `ResourceNotFoundException`.
+     * 3. Maps the `Order` entity to an `ApiOrderDTO` using the `mapToApiOrderDTO` method.
+     * 4. Returns the `ApiOrderDTO` containing the details of the retrieved order.
+     *
+     * @param orderId The ID of the order to retrieve.
+     * @return An `ApiOrderDTO` object representing the order with the specified ID.
+     * @throws ResourceNotFoundException if the order with the given ID is not found.
+     */
+    public ApiOrderDTO getOrderById(int orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order with id " + orderId + " not found"));
+
+        return mapToApiOrderDTO(order);
+    }
+
+    /**
     * Retrieves all orders and maps them to `ApiOrderDTO` objects.
     *
     * This method performs the following steps:
@@ -128,7 +200,59 @@ public class OrderService {
             .collect(Collectors.toList());
     }
 
+    // UPDATE
+
     /**
+     * Updates the status of an order by its ID.
+     *
+     * This method performs the following steps:
+     * 1. Retrieves the order by its ID. If the order does not exist, throws a ResourceNotFoundException.
+     * 2. Updates the status of the order by setting the `name` field of the associated `OrderStatus` entity.
+     * 3. Saves the updated order back to the database.
+     * 4. Constructs an `ApiOrderStatusDTO` containing the updated status and returns it.
+     *
+     * @param orderId   The ID of the order to update.
+     * @param newStatus The new status to set for the order.
+     * @return An `ApiOrderStatusDTO` containing the updated status of the order.
+     * @throws ResourceNotFoundException if the order with the given ID is not found.
+     */
+    public ApiOrderStatusDTO updateOrderStatus(int orderId, String newStatus) {
+
+        // Validate newStatus
+        if (newStatus == null || newStatus.trim().isEmpty()) {
+            throw new BadRequestException(null);
+        }
+
+        // Find the order by id or throw error
+        Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new ResourceNotFoundException("Order with id " + orderId + " not found"));
+
+        // Find the new OrderStatus by name or throw error
+        OrderStatus orderStatus = orderStatusService.findByName(newStatus)
+        .orElseThrow(() -> new ResourceNotFoundException("Order status " + newStatus + " not found"));
+
+        // Update order status
+        order.setOrder_status(orderStatus);
+        // Save order status
+        orderRepository.save(order);
+
+        // Create and return a DTO with updated status
+        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
+        statusDTO.setStatus(newStatus);
+
+        return statusDTO;
+    }
+
+    // DELETE
+
+    // HELPERS
+    private int calculateTotalCost(List<ApiProductForOrderApiDTO> products) {
+        return products.stream()
+            .mapToInt(ApiProductForOrderApiDTO::getTotal_cost)
+            .sum();
+    }
+
+     /**
      * Maps an `Order` entity to an `ApiOrderDTO`.
      *
      * This helper method performs the following steps:
@@ -161,7 +285,7 @@ public class OrderService {
             .build();
     }
 
-    /**
+     /**
      * Maps a `ProductOrder` entity to an `ApiProductForOrderApiDTO`.
      *
      * This helper method performs the following steps:
@@ -181,9 +305,27 @@ public class OrderService {
             .build();
     }
 
-    private int calculateTotalCost(List<ApiProductForOrderApiDTO> products) {
-        return products.stream()
-            .mapToInt(ApiProductForOrderApiDTO::getTotal_cost)
-            .sum();
+    private Integer getRestaurantRating(int restaurantId) {
+        List<Object[]> result = restaurantRepository.findRestaurantWithAverageRatingById(restaurantId);
+        if (!result.isEmpty()) {
+            Object[] data = result.get(0);
+            // Assuming the rating is the fourth column (index 3) and is returned as a String
+            Object ratingObj = data[3];
+            Integer rating = 0; // Default to 0 if parsing fails
+    
+            if (ratingObj instanceof Number) {
+                rating = ((Number) ratingObj).intValue();
+            } else if (ratingObj instanceof String) {
+                try {
+                    rating = Integer.parseInt((String) ratingObj);
+                } catch (NumberFormatException e) {
+                    // Log or handle parsing error if needed
+                    rating = 0; // Default to 0 if parsing fails
+                }
+            }
+    
+            return rating;
+        }
+        return 0; // Default to 0 if no rating is found
     }
 }

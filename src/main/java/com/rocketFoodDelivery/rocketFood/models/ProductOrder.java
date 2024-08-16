@@ -46,7 +46,7 @@ public class ProductOrder {
     @PrePersist
     private void validateBeforePersist() {
         if (!productBelongsToRestaurant()) {
-            throw new IllegalArgumentException("ProductOrder instance is not valid");
+            throw new IllegalArgumentException("Product does not belong to the same restaurant as the order");
         }
     }
 

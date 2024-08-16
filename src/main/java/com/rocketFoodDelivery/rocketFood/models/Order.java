@@ -45,8 +45,8 @@ public class Order {
     @JoinColumn(name = "courier_id")
     private Courier courier;
 
-    @Column(nullable = false)
-    @Min(1)
+    @Column(nullable = true)
+    @Min(0)
     @Max(5)
     private int restaurant_rating;
 
@@ -60,5 +60,24 @@ public class Order {
 
     public void setProducts(List<ProductOrder> products) {
         this.products = products;
+    }
+
+    // Method to set status using a string
+    public void setStatus(String status) {
+        OrderStatus orderStatus = OrderStatus.builder().name(status).build();
+        this.order_status = orderStatus;
+    }
+
+    // Method to get status as string
+    public String getStatus() {
+        return this.order_status != null ? this.order_status.getName() : null;
+    }
+
+    public Integer getRestaurantRating() {
+        return restaurant_rating;
+    }
+
+    public void setRestaurantRating(Integer restaurantRating) {
+        this.restaurant_rating = restaurantRating;
     }
 }

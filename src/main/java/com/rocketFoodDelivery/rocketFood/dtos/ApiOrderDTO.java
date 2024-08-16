@@ -21,4 +21,13 @@ public class ApiOrderDTO {
     private String status;
     private List <ApiProductForOrderApiDTO> products;
     private long total_cost;
+    private Integer restaurant_rating;
+
+ public Integer getRestaurantRating() {
+    return restaurant_rating;
+}
+
+public void setRestaurantRating(int restaurantRating) {
+    this.restaurant_rating = restaurantRating;
+}
 }

@@ -197,7 +197,7 @@ public class RestaurantService {
      *         or Optional.empty() if no restaurant is found.
      */
     public Optional<Restaurant> findById(int id) {
-        return null; // TODO return proper object
+        return restaurantRepository.findById(id);
     }
 
     /**

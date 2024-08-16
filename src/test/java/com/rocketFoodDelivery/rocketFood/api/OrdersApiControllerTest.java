@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,14 +21,16 @@ import org.springframework.http.MediaType;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import com.rocketFoodDelivery.rocketFood.controller.api.OrderApiController;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiOrderDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiOrderStatusDTO;
-import com.rocketFoodDelivery.rocketFood.dtos.ApiProductDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiProductForOrderApiDTO;
 import com.rocketFoodDelivery.rocketFood.exception.ResourceNotFoundException;
 import com.rocketFoodDelivery.rocketFood.repository.OrderRepository;
@@ -52,55 +55,52 @@ public class OrdersApiControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    public void updateOrderStatus_Success() throws Exception {
+// CREATE
+@Test
+@Transactional
+public void createOrder_Success() throws Exception {
+    // Prepare request data
+    int restaurantId = 4;
+    int customerId = 5;
 
-        // Mock data
-        int orderId = 2;
-        String updatedStatus = "in progress";
+    ApiOrderDTO requestOrder = ApiOrderDTO.builder()
+        .restaurant_id(restaurantId)
+        .customer_id(customerId)
+        .products(Arrays.asList(
+            ApiProductForOrderApiDTO.builder().id(24).quantity(3).build(),
+            ApiProductForOrderApiDTO.builder().id(19).quantity(1).build(),
+            ApiProductForOrderApiDTO.builder().id(20).quantity(1).build()
+        ))
+        .build();
 
-        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
-        statusDTO.setStatus(updatedStatus);
+    String requestBody = objectMapper.writeValueAsString(requestOrder);
 
-        //Mock service behavior
-        when(orderService.updateOrderStatus(orderId, updatedStatus)).thenReturn(statusDTO);
+    // Perform POST request and capture the result
+    MvcResult mvcResult = mockMvc.perform(post("/api/orders")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(requestBody))
+        .andExpect(status().isOk())
+        .andReturn();
 
-        // JSON request body
-        String requestBody = objectMapper.writeValueAsString(statusDTO);
+    // Extract the created orderId from the response
+    String responseContent = mvcResult.getResponse().getContentAsString();
+    int createdOrderId = JsonPath.read(responseContent, "$.id");
 
-        // Perform POST request and assert value
-        mockMvc.perform(post("/api/order/{order_id}/status", orderId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(requestBody))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value(updatedStatus));
-    }
+    // Perform GET request to retrieve the order by ID
+    mockMvc.perform(get("/api/orders/" + createdOrderId)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(createdOrderId))
+        .andExpect(jsonPath("$.customer_id").value(customerId))
+        .andExpect(jsonPath("$.restaurant_id").value(restaurantId))
+        .andExpect(jsonPath("$.status").value("in progress"))
+        .andExpect(jsonPath("$.products[0].id").value(24))
+        .andExpect(jsonPath("$.products[0].quantity").value(3))
+        .andExpect(jsonPath("$.total_cost").value(1500));
+}
 
-    @Test
-    public void updateOrderStatus_NotFound() throws Exception {
-        // Mock data
-        int orderId = 51;
-        String updatedStatus = "delivered";
 
-        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
-        statusDTO.setStatus(updatedStatus);
-
-        // Mock service behavior to throw ResourceNotFoundException
-        when(orderService.updateOrderStatus(orderId, updatedStatus))
-            .thenThrow(new ResourceNotFoundException("Order not found"));
-
-        // JSON request body
-        String requestBody = objectMapper.writeValueAsString(statusDTO);
-
-        // Perform POST request and assert response
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/order/{order_id}/status", orderId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(requestBody))
-            .andExpect(MockMvcResultMatchers.status().isNotFound())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Resource not found"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.details").value("Order with id " + orderId + " not found"));
-    }
-
+    // RETRIEVE
     @Test
     public void getOrders_Success() throws Exception {
 
@@ -157,4 +157,80 @@ public class OrdersApiControllerTest {
         .andExpect(jsonPath("$[1].id").value(order2.getId()))
         .andExpect(jsonPath("$[1].restaurant_id").value(order2.getRestaurant_id()));
     }
+
+    // UPDATE
+    @Test
+    public void updateOrderStatus_Success() throws Exception {
+
+        // Mock data
+        int orderId = 2;
+        String updatedStatus = "in progress";
+
+        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
+        statusDTO.setStatus(updatedStatus);
+
+        //Mock service behavior
+        when(orderService.updateOrderStatus(orderId, updatedStatus)).thenReturn(statusDTO);
+
+        // JSON request body
+        String requestBody = objectMapper.writeValueAsString(statusDTO);
+
+        // Perform POST request and assert value
+        mockMvc.perform(post("/api/order/{order_id}/status", orderId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value(updatedStatus));
+    }
+    
+    @Test
+    public void updateOrderStatus_NotFound() throws Exception {
+        // Mock data
+        int orderId = 51;
+        String updatedStatus = "in progress";
+
+        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
+        statusDTO.setStatus(updatedStatus);
+
+        // Mock service behavior to throw ResourceNotFoundException
+        when(orderService.updateOrderStatus(orderId, updatedStatus))
+            .thenThrow(new ResourceNotFoundException("Order not found"));
+
+        // JSON request body
+        String requestBody = objectMapper.writeValueAsString(statusDTO);
+
+        // Perform POST request and assert not found response
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/order/{order_id}/status", orderId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+            .andExpect(MockMvcResultMatchers.status().isNotFound())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Resource not found"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.details").value("Order with id " + orderId + " not found"));
+    }
+
+    @Test
+    public void updateOrderStatus_BadRequest() throws Exception {
+
+        //Mockdata
+        int orderId = 2;
+
+        // Create an ApiOrderStatusDTO without setting status
+        ApiOrderStatusDTO statusDTO = new ApiOrderStatusDTO();
+        statusDTO.setStatus("");
+
+        // JSON request body
+        String requestBody = objectMapper.writeValueAsString(statusDTO);
+
+        // Perform POST request and assert bad request response
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/order/{order_id}/status", orderId)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(requestBody))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.error").value("Invalid or missing parameters"))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.details").isEmpty());
+    }
+
+    // DELETE
+
+    
 }

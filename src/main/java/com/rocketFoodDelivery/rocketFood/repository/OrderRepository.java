@@ -14,6 +14,37 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
 
+    // CREATE
+
+/**
+ * Creates a new order in the database.
+ *
+ * Executes a native SQL query to insert a new order record into the `orders` table
+ * with the provided details such as customer ID, restaurant ID, status, and total cost.
+ *
+ * This method is marked as a modifying query, indicating that it performs a data update operation.
+ * The transaction is managed at the method level, ensuring that the operation is atomic.
+ *
+ * @param id The ID of the new order to be created.
+ * @param customerId The ID of the customer who placed the order.
+ * @param restaurantId The ID of the restaurant where the order was placed.
+ * @param status The current status of the order (e.g., "in progress", "completed").
+ * @param totalCost The total cost of the order.
+ * @return The number of rows affected by the insert operation.
+ */
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO orders (id, customer_id, customer_name, customer_address, restaurant_id, restaurant_name, restaurant_address, status, total_cost) VALUES (:id, :customerId, :customerName, :customerAddress, :restaurantId, :restaurantName, :restaurantAddress, :status, :totalCost)", nativeQuery = true)
+    void createOrder(@Param("id") int id, 
+                     @Param("customerId") int customerId, 
+                     @Param("customerName") String customerName, 
+                     @Param("customerAddress") String customerAddress, 
+                     @Param("restaurantId") int restaurantId, 
+                     @Param("restaurantName") String restaurantName, 
+                     @Param("restaurantAddress") String restaurantAddress, 
+                     @Param("status") String status, 
+                     @Param("totalCost") long totalCost);
+                     
     /**
      * Finds an order by its ID.
      *
