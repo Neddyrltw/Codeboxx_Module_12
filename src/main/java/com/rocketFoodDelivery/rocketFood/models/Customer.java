@@ -41,4 +41,8 @@ public class Customer {
     public String getName() {
         return userEntity.getName();
     }
+
+    public int getAddressId() {
+        return id;
+    }
 }

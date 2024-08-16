@@ -44,4 +44,8 @@ public class Restaurant {
 
     @Column(nullable = false)
     private String email;
+
+    public int getAddressId() {
+        return id;
+    }
 }

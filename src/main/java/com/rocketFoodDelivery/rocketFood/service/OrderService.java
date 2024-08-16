@@ -1,5 +1,6 @@
 package com.rocketFoodDelivery.rocketFood.service;
 
+import com.rocketFoodDelivery.rocketFood.dtos.ApiAddressDto;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiOrderDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiOrderStatusDTO;
 import com.rocketFoodDelivery.rocketFood.dtos.ApiProductForOrderApiDTO;
@@ -18,6 +19,7 @@ import com.rocketFoodDelivery.rocketFood.models.Restaurant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.amqp.RabbitConnectionDetails.Address;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +50,7 @@ public class OrderService {
 
     // CREATE
 
-    /**
+/**
  * Creates a new order based on the provided `ApiOrderDTO`.
  *
  * This method performs the following steps:
@@ -132,12 +134,12 @@ public ApiOrderDTO createOrder(ApiOrderDTO apiOrderDTO) {
      * @throws ResourceNotFoundException if no orders are found for the given criteria.
      */
     public List<ApiOrderDTO> getOrdersByTypeAndId(String type, int id) {
-        // 1. Validate input
+        // Validate input
         if (type == null || id <= 0) {
             throw new BadRequestException("Invalid or missing parameters");
         }
 
-        // 2. Fetch orders based on type
+        // Fetch orders based on type
         List<Order> orders;
         switch (type.toLowerCase()) {
             case "customer":
@@ -153,7 +155,7 @@ public ApiOrderDTO createOrder(ApiOrderDTO apiOrderDTO) {
                 throw new BadRequestException("Invalid type parameter");
         }
 
-        // 3. Check if orders were found
+        // Check if orders were found
         if (orders.isEmpty()) {
             throw new ResourceNotFoundException("No orders found for the given criteria");
         }
@@ -243,7 +245,7 @@ public ApiOrderDTO createOrder(ApiOrderDTO apiOrderDTO) {
         return statusDTO;
     }
 
-    // DELETE
+   
 
     // HELPERS
     private int calculateTotalCost(List<ApiProductForOrderApiDTO> products) {
@@ -265,24 +267,34 @@ public ApiOrderDTO createOrder(ApiOrderDTO apiOrderDTO) {
      * @return An `ApiOrderDTO` containing the mapped details of the order.
      */
     private ApiOrderDTO mapToApiOrderDTO(Order order) {
+        // Fetch addresses and convert to string
+        String customerAddressString = addressService.findById(order.getCustomer().getAddressId())
+        .map(addressService::convertToApiAddressDto)
+        .map(ApiAddressDto::getFullAddress) // Assuming getFullAddress() returns a string
+        .orElse(null);
 
-        // Map order details to ApiOrderDTO including nested products
-        List<ApiProductForOrderApiDTO> products = order.getProducts().stream()
-            .map(this::mapToApiProductForOrderApiDTO)
-            .collect(Collectors.toList());
+    String restaurantAddressString = addressService.findById(order.getRestaurant().getAddressId())
+        .map(addressService::convertToApiAddressDto)
+        .map(ApiAddressDto::getFullAddress) // Assuming getFullAddress() returns a string
+        .orElse(null);
 
-            return ApiOrderDTO.builder()
-            .id(order.getId())
-            .customer_id(order.getCustomer().getId())
-            .customer_name(order.getCustomer().getName())
-            .customer_address(addressService.convertToApiAddressDto(order.getCustomer().getAddress()).toString()) // Convert to String
-            .restaurant_id(order.getRestaurant().getId())
-            .restaurant_name(order.getRestaurant().getName())
-            .restaurant_address(addressService.convertToApiAddressDto(order.getRestaurant().getAddress()).toString()) // Convert to String
-            .status(order.getOrder_status().getName())
-            .products(products)
-            .total_cost(calculateTotalCost(products))
-            .build();
+    // Map order details to ApiOrderDTO including nested products
+    List<ApiProductForOrderApiDTO> products = order.getProducts().stream()
+        .map(this::mapToApiProductForOrderApiDTO)
+        .collect(Collectors.toList());
+
+    return ApiOrderDTO.builder()
+        .id(order.getId())
+        .customer_id(order.getCustomer().getId())
+        .customer_name(order.getCustomer().getName())
+        .customer_address(customerAddressString) // Use string for address
+        .restaurant_id(order.getRestaurant().getId())
+        .restaurant_name(order.getRestaurant().getName())
+        .restaurant_address(restaurantAddressString) // Use string for address
+        .status(order.getOrder_status().getName())
+        .products(products)
+        .total_cost(calculateTotalCost(products))
+        .build();
     }
 
      /**

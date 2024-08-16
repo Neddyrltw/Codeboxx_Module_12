@@ -23,11 +23,11 @@ public class ApiOrderDTO {
     private long total_cost;
     private Integer restaurant_rating;
 
- public Integer getRestaurantRating() {
-    return restaurant_rating;
-}
+    public Integer getRestaurantRating() {
+        return restaurant_rating;
+    }
 
-public void setRestaurantRating(int restaurantRating) {
-    this.restaurant_rating = restaurantRating;
-}
+    public void setRestaurantRating(int restaurantRating) {
+        this.restaurant_rating = restaurantRating;
+    }
 }
