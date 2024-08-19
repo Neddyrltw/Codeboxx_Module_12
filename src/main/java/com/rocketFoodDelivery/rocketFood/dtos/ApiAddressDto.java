@@ -25,4 +25,9 @@ public class ApiAddressDto {
     @JsonProperty("postal_code")
     @NotNull
     private String postalCode;
+
+
+    public String getFullAddress() {
+        return streetAddress + ", " + city + ", " + postalCode;
+    }
 }

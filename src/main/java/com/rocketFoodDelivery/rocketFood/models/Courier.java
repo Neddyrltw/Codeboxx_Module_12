@@ -41,4 +41,8 @@ public class Courier {
 
     @Column(columnDefinition = "boolean default true") // default
     private boolean active;
+
+    public String getName() {
+        return userEntity.getName();
+    }
 }

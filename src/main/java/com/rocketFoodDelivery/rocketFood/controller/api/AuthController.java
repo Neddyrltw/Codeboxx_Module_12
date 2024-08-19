@@ -22,10 +22,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 
 
 @RestController
 public class AuthController {
+    private static final Logger logger = Logger.getLogger(AuthController.class.getName());
+
     private CourierRepository courierRepository;
     private CustomerRepository customerRepository;
     @Autowired
@@ -38,12 +41,15 @@ public class AuthController {
     }
     @PostMapping("/api/auth")
     public ResponseEntity<?> authenticate(@RequestBody @Valid AuthRequestDTO request){
+        logger.info("Received request: " + request);
         try {
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(), request.getPassword())
             );
             UserEntity user = (UserEntity) authentication.getPrincipal();
+            logger.info("Authentication successful for user: " + user.getEmail());
+
             String accessToken = jwtUtil.generateAccessToken(user);
             Optional<Courier> courier = courierRepository.findByUserEntityId(user.getId());
             Optional<Customer> customer = customerRepository.findByUserEntityId(user.getId());
@@ -60,6 +66,7 @@ public class AuthController {
             response.setUser_id(user.getId());
             return ResponseEntity.ok().body(response);
         } catch (BadCredentialsException e) {
+            logger.warning("Authentication failed for email: " + request.getEmail());
             AuthResponseErrorDTO response = new AuthResponseErrorDTO();
             response.setSuccess(false);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);

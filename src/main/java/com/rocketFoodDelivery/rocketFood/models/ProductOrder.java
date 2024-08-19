@@ -35,13 +35,18 @@ public class ProductOrder {
 
     @Min(1)
     private Integer product_quantity;
+    
     @Min(0)
     private Integer product_unit_cost;
+
+    public Integer getTotalCost() {
+        return product_quantity * product_unit_cost;
+    }
 
     @PrePersist
     private void validateBeforePersist() {
         if (!productBelongsToRestaurant()) {
-            throw new IllegalArgumentException("ProductOrder instance is not valid");
+            throw new IllegalArgumentException("Product does not belong to the same restaurant as the order");
         }
     }
 

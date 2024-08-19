@@ -1,5 +1,6 @@
 package com.rocketFoodDelivery.rocketFood.service;
 
+import com.rocketFoodDelivery.rocketFood.dtos.ApiAddressDto;
 import com.rocketFoodDelivery.rocketFood.models.Address;
 import com.rocketFoodDelivery.rocketFood.repository.AddressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,7 @@ import java.util.Optional;
 public class AddressService {
     private final AddressRepository addressRepository;
 
-    @Autowired
-    public AddressService(AddressRepository addressRepository){
+    public AddressService(AddressRepository addressRepository) {
         this.addressRepository = addressRepository;
     }
 
@@ -26,28 +26,21 @@ public class AddressService {
 
     public Optional<Integer> findLastAddressId() {
         List<Address> addresses = addressRepository.findAllByOrderByIdDesc();
-        if (!addresses.isEmpty()) {
-            return Optional.of(addresses.get(0).getId());
-        } else {
-            return Optional.empty();
-        }
+        return addresses.isEmpty() ? Optional.empty() : Optional.of(addresses.get(0).getId());
     }
     
     public Address saveAddress(Address address){
         return addressRepository.save(address);
     }
 
-    @Transactional
-    public int saveAddress(String streetAddress, String city, String postalCode) {
-        try {
-            addressRepository.saveAddress(streetAddress, city, postalCode);
-            return addressRepository.getLastInsertedId();
-        } catch (DataAccessException e) {
-            e.printStackTrace();
-            return -1;
-        }
+    public ApiAddressDto convertToApiAddressDto(Address address) {
+        return new ApiAddressDto(
+            address.getId(),
+            address.getStreetAddress(),
+            address.getCity(),
+            address.getPostalCode()
+        );
     }
-
 
     public void delete(int id) {
         addressRepository.deleteById(id);

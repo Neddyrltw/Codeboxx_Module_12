@@ -17,6 +17,26 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
     List<Restaurant> findAll();
 
     /**
+     * Inserts a new restaurant into the database.
+     *
+     * @param userId      The ID of the user associated with the restaurant.
+     * @param addressId   The ID of the address associated with the restaurant.
+     * @param name        The name of the restaurant.
+     * @param priceRange  The price range of the restaurant.
+     * @param phone       The phone number of the restaurant.
+     * @param email       The email address of the restaurant.
+     */
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO restaurants (user_id, address_id, name, price_range, phone, email) VALUES (:userId, :addressId, :name, :priceRange, :phone, :email)", nativeQuery = true)
+    void saveRestaurant(@Param("userId") int userId,
+                         @Param("addressId") int addressId,
+                         @Param("name") String name,
+                         @Param("priceRange") int priceRange,
+                         @Param("phone") String phone,
+                         @Param("email") String email);
+
+    /**
      * Finds a restaurant by its ID along with the calculated average rating rounded up to the ceiling.
      *
      * @param restaurantId The ID of the restaurant to retrieve.
@@ -55,34 +75,45 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Integer>
         "WHERE (:rating IS NULL OR result.rating = :rating)")
     List<Object[]> findRestaurantsByRatingAndPriceRange(@Param("rating") Integer rating, @Param("priceRange") Integer priceRange);
 
-    // TODO
-    // @Modifying
-    // @Transactional
-    // @Query(nativeQuery = true)
-    // // value = "Write SQL query here")
-    // void saveRestaurant(long userId, long addressId, String name, int priceRange, String phone, String email);
+    /**
+     * Retrieves the ID of the last inserted restaurant.
+     *
+     * @return An Optional containing the ID of the last inserted restaurant, or an empty Optional if no restaurant has been inserted.
+     */
+    @Query(nativeQuery = true, value = "SELECT LAST_INSERT_ID()")
+    Optional<Integer> findLastInsertedId();
 
-    // // TODO
-    // @Modifying
-    // @Transactional
-    // @Query(nativeQuery = true)
-    // // value = "TODO Write SQL query here")
-    // void updateRestaurant(int restaurantId, String name, int priceRange, String phone);
+    /**
+     * Finds a restaurant by its ID.
+     *
+     * @param id The ID of the restaurant to find.
+     * @return An Optional containing the found restaurant, or an empty Optional if no restaurant with the given ID exists.
+     */
+    @Query(nativeQuery = true, value = "SELECT * FROM restaurants WHERE id = :id")
+    Optional<Restaurant> findById(@Param("id") int id);
 
-    // // TODO
-    // @Query(nativeQuery = true)
-    // // value = "TODO Write SQL query here")
-    // Optional<Restaurant> findRestaurantById(@Param("restaurantId") int restaurantId);
+    /**
+     * Updates the details of an existing restaurant in the database.
+     *
+     * Executes a native SQL query that updates the `name`, `price_range`, and `phone` fields of the 
+     * restaurant record identified by the given `restaurantId`.
+     *
+     * This method is marked as a modifying query, indicating that it performs a data update operation.
+     * The transaction is managed at the method level, ensuring that the operation is atomic.
+     *
+     * @param restaurantId The ID of the restaurant to update. (Required)
+     * @param name         The new name for the restaurant. (Required)
+     * @param priceRange   The new price range for the restaurant. (Required)
+     * @param phone        The new phone number for the restaurant. (Required)
+     */
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE restaurants SET name = :name, price_range = :priceRange, phone = :phone WHERE id = :restaurantId", nativeQuery = true)
+    void updateRestaurant(@Param("restaurantId") int restaurantId, @Param("name") String name, @Param("priceRange") int priceRange, @Param("phone") String phone);
 
-    // @Query(nativeQuery = true)
-    // // value = "SELECT LAST_INSERT_ID() AS id")
-    // int getLastInsertedId();
-
-    // // TODO
-    // @Modifying
-    // @Transactional
-    // @Query(nativeQuery = true)
-    // // value = "TODO Write SQL query here")
-    // void deleteRestaurantById(@Param("restaurantId") int restaurantId);
-
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM restaurants WHERE id = :restaurantId", nativeQuery = true)
+    void deleteRestaurantById(@Param("restaurantId") int restaurantId);    
 }
+

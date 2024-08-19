@@ -1,22 +1,60 @@
 package com.rocketFoodDelivery.rocketFood.service;
 
+import com.rocketFoodDelivery.rocketFood.dtos.ApiProductDTO;
+import com.rocketFoodDelivery.rocketFood.exception.ResourceNotFoundException;
 import com.rocketFoodDelivery.rocketFood.repository.ProductRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class ProductService {
-    @PersistenceContext
-    private EntityManager entityManager;
-    ProductRepository productRepository;
+    
+    private final ProductRepository productRepository;
 
-    @Autowired
-    public ProductService(ProductRepository productRepository){
+    // Constructor injection
+    public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
+    /**
+     * Retrieves a list of products for a given restaurant.
+     *
+     * @param restaurantId The ID of the restaurant to retrieve products for.
+     * @return A list of ApiProductDTO objects representing the products.
+     * @throws ResourceNotFoundException if no products are found for the given restaurant ID.
+     */
+    public List<ApiProductDTO> findProductsByRestaurant(int restaurantId) {
+        // Fetch products using the repository method
+        List<Object[]> results = productRepository.findProductsByRestaurantId(restaurantId);
+        List<ApiProductDTO> products = new ArrayList<>();
 
+        // Convert the results to ApiProductDTO
+        for (Object[] row : results) {
+            int id = (int) row[0];
+            String name = (String) row[1];
+            int cost = (int) row[2];
+            String description = (String) row[3];
+            int restId = (int) row[4];
+
+            products.add(new ApiProductDTO(id, name, cost, description, restId));
+        }
+
+        if (products.isEmpty()) {
+            throw new ResourceNotFoundException("Product with id " + restaurantId + " not found");
+        }
+
+        return products;
+    }
+
+    /**
+     * Deletes all products associated with a specific restaurant by the restaurant's ID.
+     *
+     * @param restaurantId The ID of the restaurant whose products are to be deleted.
+     */
+    public void deleteProductsByRestaurantId(int restaurantId) {
+        productRepository.deleteProductsByRestaurantId(restaurantId);
+    }
 }
